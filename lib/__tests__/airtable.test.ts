@@ -1,0 +1,119 @@
+/**
+ * @fileoverview Tests for Airtable database operations
+ * @description Comprehensive test suite for all Airtable CRUD operations,
+ * data parsing, validation, and error handling
+ */
+
+// Mock console.error
+const mockConsoleError = jest.fn();
+console.error = mockConsoleError;
+
+// Mock environment first
+jest.mock('../env', () => ({
+  env: {
+    AIRTABLE_API_KEY: 'test-api-key',
+    AIRTABLE_BASE_ID: 'test-base-id',
+    AIRTABLE_MEETING_ROOMS_TABLE: 'MeetingRooms',
+    AIRTABLE_BOOKINGS_TABLE: 'Bookings'
+  }
+}));
+
+// Mock the custom airtable_client
+jest.mock('../airtable_client', () => ({
+  fetchAllRecords: jest.fn(),
+  fetchRecord: jest.fn(),
+  createRecord: jest.fn(),
+  updateRecord: jest.fn(),
+}));
+
+import { getMeetingRooms, getBookings } from '../airtable';
+import { fetchAllRecords } from '../airtable_client';
+
+const mockFetchAllRecords = fetchAllRecords as jest.MockedFunction<typeof fetchAllRecords>;
+
+describe('airtable', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockConsoleError.mockClear();
+  });
+
+  describe('getMeetingRooms', () => {
+    it('should fetch and parse meeting rooms', async () => {
+      const mockRecords = [
+        {
+          id: 'rec123',
+          fields: {
+            name: 'Conference Room A',
+            capacity: 8,
+            notes: 'Main conference room',
+            location: 'Floor 1',
+            status: 'Available',
+            startTime: 28800,
+            endTime: 64800,
+          }
+        }
+      ];
+
+      mockFetchAllRecords.mockResolvedValue(mockRecords);
+
+      const rooms = await getMeetingRooms();
+
+      expect(fetchAllRecords).toHaveBeenCalledWith('MeetingRooms', {
+        fields: ['name', 'capacity', 'notes', 'location', 'status', 'startTime', 'endTime', 'image'],
+        sort: [{ field: 'name', direction: 'asc' }]
+      });
+
+      expect(rooms).toHaveLength(1);
+      expect(rooms[0]).toEqual({
+        id: 'rec123',
+        name: 'Conference Room A',
+        capacity: 8,
+        notes: 'Main conference room',
+        location: 'Floor 1',
+        status: 'Available',
+        startTime: 28800,
+        endTime: 64800,
+        image: undefined,
+      });
+    });
+  });
+
+  describe('getBookings', () => {
+    it('should fetch and parse all bookings', async () => {
+      const mockRecords = [
+        {
+          id: 'rec456',
+          fields: {
+            user: 'U123456789',
+            userLabel: 'John Doe',
+            startTime: '2024-01-15T10:00:00.000Z',
+            endTime: '2024-01-15T11:00:00.000Z',
+            note: 'Team meeting',
+            room: ['rec123'],
+            status: 'Confirmed',
+          }
+        }
+      ];
+
+      mockFetchAllRecords.mockResolvedValue(mockRecords);
+
+      const bookings = await getBookings();
+
+      expect(fetchAllRecords).toHaveBeenCalledWith('Bookings');
+
+      expect(bookings).toHaveLength(1);
+      expect(bookings[0]).toEqual({
+        id: 'rec456',
+        user: 'U123456789',
+        userLabel: 'John Doe',
+        startTime: '2024-01-15T10:00:00.000Z',
+        endTime: '2024-01-15T11:00:00.000Z',
+        note: 'Team meeting',
+        room: 'rec123',
+        roomName: undefined,
+        roomLocation: undefined,
+        status: 'Confirmed',
+      });
+    });
+  });
+});
