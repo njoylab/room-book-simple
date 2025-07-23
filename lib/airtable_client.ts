@@ -9,7 +9,7 @@ const headers = {
 
 interface AirtableRecord {
     id: string;
-    fields: Record<string, any>;
+    fields: Record<string, unknown>;
     createdTime: string;
 }
 
@@ -48,7 +48,7 @@ export async function fetchAllRecords(
         params.append('filterByFormula', filterByFormula);
     }
 
-    let allRecords: AirtableRecord[] = [];
+    const allRecords: AirtableRecord[] = [];
     let offset: string | undefined;
 
     do {
@@ -103,7 +103,7 @@ export async function fetchRecord(table: string, recordId: string): Promise<Airt
 /**
  * Create a new record
  */
-export async function createRecord(table: string, fields: Record<string, any>): Promise<AirtableRecord> {
+export async function createRecord(table: string, fields: Record<string, unknown>): Promise<AirtableRecord> {
     const url = `${AIRTABLE_BASE_URL}/${table}`;
 
     const response = await fetch(url, {
@@ -124,7 +124,7 @@ export async function createRecord(table: string, fields: Record<string, any>): 
 /**
  * Update a record
  */
-export async function updateRecord(table: string, recordId: string, fields: Record<string, any>): Promise<AirtableRecord> {
+export async function updateRecord(table: string, recordId: string, fields: Record<string, unknown>): Promise<AirtableRecord> {
     const url = `${AIRTABLE_BASE_URL}/${table}/${recordId}`;
 
     const response = await fetch(url, {

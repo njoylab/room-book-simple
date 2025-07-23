@@ -6,6 +6,7 @@
 
 import type { RequestCookies, ResponseCookies } from 'next/dist/compiled/@edge-runtime/cookies';
 import type { User } from '../types';
+import * as env from '../env';
 
 // Mock the environment
 jest.mock('../env', () => ({
@@ -320,8 +321,8 @@ describe.skip('auth_server', () => {
   describe('Cookie security settings', () => {
     it('should set secure flag in production environment', async () => {
       // Mock production environment
-      const originalIsProduction = require('../env').isProduction;
-      require('../env').isProduction = true;
+      const originalIsProduction = env.isProduction;
+      (env as any).isProduction = true;
 
       const mockCookies = {
         set: jest.fn()
@@ -338,7 +339,7 @@ describe.skip('auth_server', () => {
       );
 
       // Restore original value
-      require('../env').isProduction = originalIsProduction;
+      (env as any).isProduction = originalIsProduction;
     });
 
     it('should set correct cookie path and sameSite settings', async () => {

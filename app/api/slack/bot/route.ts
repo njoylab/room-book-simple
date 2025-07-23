@@ -92,7 +92,7 @@ function formatBookingsMessage(bookings: Booking[]) {
     return startTime > now;
   });
 
-  const blocks: any[] = [
+  const blocks: object[] = [
     {
       type: 'section',
       text: {

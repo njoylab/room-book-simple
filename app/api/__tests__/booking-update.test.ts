@@ -7,6 +7,7 @@ import { NextRequest } from 'next/server';
 import { PATCH } from '../bookings/[id]/route';
 import * as airtable from '@/lib/airtable';
 import * as authServer from '@/lib/auth_server';
+import * as validation from '@/lib/validation';
 import { User, Booking, BOOKING_STATUS } from '@/lib/types';
 
 // Mock dependencies
@@ -16,6 +17,12 @@ jest.mock('@/lib/airtable', () => ({
 
 jest.mock('@/lib/auth_server', () => ({
   getServerUser: jest.fn()
+}));
+
+jest.mock('@/lib/validation', () => ({
+  checkRateLimit: jest.fn(),
+  validateAndSanitize: jest.fn(),
+  updateBookingSchema: {}
 }));
 
 jest.mock('@/lib/validation', () => ({
@@ -36,7 +43,7 @@ jest.mock('@/lib/error-handler', () => ({
 
 const mockUpdateBooking = airtable.updateBooking as jest.Mock;
 const mockGetServerUser = authServer.getServerUser as jest.Mock;
-const mockCheckRateLimit = require('@/lib/validation').checkRateLimit as jest.Mock;
+const mockCheckRateLimit = validation.checkRateLimit as jest.Mock;
 
 // Test data
 const testUser: User = {
@@ -233,7 +240,7 @@ describe('/api/bookings/[id]', () => {
     it('should validate booking ID parameter', async () => {
       mockGetServerUser.mockResolvedValue(testUser);
       
-      const { validateAndSanitize } = require('@/lib/validation');
+      const { validateAndSanitize } = validation;
       validateAndSanitize.mockImplementation((schema, value) => {
         if (value === 'invalid-id') {
           throw new Error('Invalid booking ID format');
@@ -258,9 +265,9 @@ describe('/api/bookings/[id]', () => {
     it('should validate update data', async () => {
       mockGetServerUser.mockResolvedValue(testUser);
       
-      const { validateAndSanitize } = require('@/lib/validation');
+      const { validateAndSanitize } = validation;
       validateAndSanitize.mockImplementation((schema, value) => {
-        if (schema === require('@/lib/validation').updateBookingSchema && value.status === 'InvalidStatus') {
+        if (schema === validation.updateBookingSchema && value.status === 'InvalidStatus') {
           throw new Error('Invalid booking status');
         }
         return value;

@@ -347,7 +347,7 @@ export async function updateBooking(
  * @param record - The Airtable record to parse
  * @returns Booking The parsed booking object
  */
-function parseBooking(record: { id: string; fields: Record<string, any> }): Booking {
+function parseBooking(record: { id: string; fields: Record<string, unknown> }): Booking {
   return {
     id: record.id,
     user: record.fields.user as string,
@@ -367,7 +367,7 @@ function parseBooking(record: { id: string; fields: Record<string, any> }): Book
  * @param records - Array of Airtable records to parse
  * @returns MeetingRoom[] Array of parsed meeting room objects
  */
-function parseRoom(records: { id: string; fields: Record<string, any> }[]): MeetingRoom[] {
+function parseRoom(records: { id: string; fields: Record<string, unknown> }[]): MeetingRoom[] {
   return records.map(record => ({
     id: record.id,
     name: record.fields.name as string,

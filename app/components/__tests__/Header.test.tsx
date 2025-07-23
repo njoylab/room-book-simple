@@ -7,6 +7,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { Header } from '../Header';
 import * as authServer from '@/lib/auth_server';
+import { cookies } from 'next/headers';
 import { User } from '@/lib/types';
 
 // Mock Next.js modules
@@ -42,7 +43,7 @@ jest.mock('../UserMenu', () => ({
 }));
 
 const mockGetServerUser = authServer.getServerUser as jest.Mock;
-const mockCookies = require('next/headers').cookies as jest.Mock;
+const mockCookies = cookies as jest.Mock;
 
 // Test data
 const testUser: User = {

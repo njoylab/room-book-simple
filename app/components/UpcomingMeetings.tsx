@@ -190,7 +190,7 @@ function MeetingItem({ booking, room, isCurrent }: MeetingItemProps) {
 
           {booking.note && (
             <div className="mt-2 text-sm text-gray-500 italic">
-              "{booking.note}"
+              &quot;{booking.note}&quot;
             </div>
           )}
         </div>

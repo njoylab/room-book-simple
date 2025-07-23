@@ -38,7 +38,7 @@ describe('/api/auth/logout', () => {
     it('should call logout with response cookies', async () => {
       mockLogout.mockResolvedValue(undefined);
 
-      const response = await POST();
+      await POST();
 
       // Verify logout was called with cookies object
       expect(mockLogout).toHaveBeenCalledTimes(1);

@@ -6,12 +6,17 @@
 import { NextRequest } from 'next/server';
 import { GET } from '../rooms/[id]/slots/route';
 import * as airtable from '@/lib/airtable';
+import * as validation from '@/lib/validation';
 import { MeetingRoom, Booking } from '@/lib/types';
 
 // Mock Airtable operations
 jest.mock('@/lib/airtable', () => ({
   getRoomById: jest.fn(),
   getBookingsForDate: jest.fn()
+}));
+
+jest.mock('@/lib/validation', () => ({
+  validateAndSanitize: jest.fn()
 }));
 
 // Mock validation
@@ -295,7 +300,7 @@ describe.skip('/api/rooms/[id]/slots', () => {
     });
 
     it('should handle invalid date formats', async () => {
-      const { validateAndSanitize } = require('@/lib/validation');
+      const { validateAndSanitize } = validation;
       validateAndSanitize.mockImplementation(() => {
         throw new Error('Invalid date format');
       });

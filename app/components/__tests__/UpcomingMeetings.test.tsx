@@ -5,6 +5,7 @@
 
 import { render, screen } from '@testing-library/react';
 import { UpcomingMeetings } from '../UpcomingMeetings';
+import * as airtable from '../../../lib/airtable';
 
 // Mock the airtable functions
 jest.mock('../../../lib/airtable', () => ({
@@ -25,7 +26,7 @@ jest.mock('react', () => ({
   cache: (fn: any) => fn,
 }));
 
-const { getUpcomingBookings, getMeetingRooms } = require('../../../lib/airtable');
+const { getUpcomingBookings, getMeetingRooms } = airtable;
 
 const mockBookings = [
   {
