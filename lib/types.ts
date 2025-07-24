@@ -29,6 +29,8 @@ export interface MeetingRoom {
   image: AirtableImage | null;
   /** Maximum number of hours a meeting can last in this room (optional - overrides global setting) */
   maxMeetingHours?: number;
+  /** Array of tags for grouping and categorizing rooms */
+  tags?: string[];
 }
 
 /**

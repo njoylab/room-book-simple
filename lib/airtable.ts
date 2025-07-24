@@ -32,7 +32,7 @@ const MEETING_ROOMS_TABLE = env.AIRTABLE_MEETING_ROOMS_TABLE;
 const BOOKINGS_TABLE = env.AIRTABLE_BOOKINGS_TABLE;
 
 /** Array of public fields to retrieve for meeting rooms (excludes sensitive data) */
-const publicFieldsRooms = ['name', 'capacity', 'notes', 'location', 'status', 'startTime', 'endTime', 'image', 'maxMeetingHours'];
+const publicFieldsRooms = ['name', 'capacity', 'notes', 'location', 'status', 'startTime', 'endTime', 'image', 'maxMeetingHours', 'tags'];
 
 /**
  * Retrieves all meeting rooms from Airtable
@@ -414,6 +414,7 @@ function parseRoom(records: { id: string; fields: Record<string, unknown> }[]): 
     endTime: Number(record.fields.endTime || 64800), // 6:00 PM
     image: Array.isArray(record.fields.image) ? record.fields.image[0] : record.fields.image,
     maxMeetingHours: record.fields.maxMeetingHours ? Number(record.fields.maxMeetingHours) : undefined,
+    tags: Array.isArray(record.fields.tags) ? record.fields.tags as string[] : undefined,
   }));
 }
 
