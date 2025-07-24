@@ -69,7 +69,7 @@ describe('airtable', () => {
       const rooms = await getMeetingRooms();
 
       expect(fetchAllRecords).toHaveBeenCalledWith('MeetingRooms', {
-        fields: ['name', 'capacity', 'notes', 'location', 'status', 'startTime', 'endTime', 'image', 'maxMeetingHours'],
+        fields: ['name', 'capacity', 'notes', 'location', 'status', 'startTime', 'endTime', 'image', 'maxMeetingHours', 'tags'],
         sort: [{ field: 'name', direction: 'asc' }]
       });
 
