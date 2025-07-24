@@ -589,5 +589,42 @@ describe('/api/bookings', () => {
       expect(responseData).toHaveProperty('error', 'Meeting duration exceeds the maximum allowed time of 8 hours for this room')
       expect(responseData).toHaveProperty('type', 'VALIDATION_ERROR')
     })
+
+    it('should handle decimal maxMeetingHours values correctly', async () => {
+      ;(getServerUser as jest.Mock).mockResolvedValue(mockUser)
+      ;(checkRateLimit as jest.Mock).mockReturnValue(true)
+      ;(validateAndSanitize as jest.Mock).mockReturnValue(validBookingData)
+      ;(getRoomById as jest.Mock).mockResolvedValue({
+        id: 'recABCDEFGHIJKLMNOP',
+        name: 'Test Room',
+        capacity: 10,
+        startTime: 28800,
+        endTime: 64800,
+        image: null,
+        maxMeetingHours: 1.5 // 90 minutes limit
+      })
+      ;(validateMeetingDuration as jest.Mock).mockReturnValue(false) // Durata eccessiva
+      ;(validateOperatingHours as jest.Mock).mockReturnValue(true)
+
+      const request = new NextRequest('http://localhost:3000/api/bookings', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-forwarded-for': '127.0.0.1',
+        },
+        body: JSON.stringify(validBookingData),
+      })
+
+      Object.defineProperty(request, 'cookies', {
+        value: mockCookies,
+      })
+
+      const response = await POST(request)
+
+      expect(response.status).toBe(400)
+      const responseData = await response.json()
+      expect(responseData).toHaveProperty('error', 'Meeting duration exceeds the maximum allowed time of 1.5 hours for this room')
+      expect(responseData).toHaveProperty('type', 'VALIDATION_ERROR')
+    })
   })
 })

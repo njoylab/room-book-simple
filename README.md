@@ -86,7 +86,20 @@ Before running this application, you'll need:
 - The `maxMeetingHours` field in the Meeting Rooms table is optional
 - If not set, the room will use the global `MAX_MEETING_HOURS` environment variable
 - If set, it overrides the global setting for that specific room
+- **Supports decimal values** for precise duration limits (e.g., `1.5` for 90 minutes, `0.5` for 30 minutes)
 - Example: Set `maxMeetingHours` to `2` for a small meeting room that should only allow 2-hour meetings
+- Example: Set `maxMeetingHours` to `1.5` for a room that should only allow 90-minute meetings
+
+**Common Duration Conversions**:
+| Duration | `maxMeetingHours` | Use Case |
+|----------|-------------------|----------|
+| 30 minutes | `0.5` | Quick standup meetings |
+| 45 minutes | `0.75` | Short team meetings |
+| 60 minutes | `1` | Standard meetings |
+| 90 minutes | `1.5` | Extended meetings |
+| 2 hours | `2` | Long meetings |
+| 2.5 hours | `2.5` | Workshops |
+| 3 hours | `3` | Training sessions |
 
 ### 2. Slack App Configuration
 
