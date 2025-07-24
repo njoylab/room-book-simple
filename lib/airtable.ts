@@ -8,12 +8,22 @@ import { createRecord, fetchAllRecords, fetchRecord, updateRecord } from './airt
 import { env } from './env';
 import { BOOKING_STATUS, Booking, MeetingRoom } from './types';
 
+/**
+ * Gets the maximum meeting duration in hours for a specific room
+ * @param room - The meeting room object
+ * @returns {number} Maximum meeting duration in hours (room-specific or global default)
+ * @description Returns the room-specific maxMeetingHours if set, otherwise falls back to the global MAX_MEETING_HOURS setting
+ */
+export function getMaxMeetingHours(room: MeetingRoom): number {
+  return room.maxMeetingHours ?? env.MAX_MEETING_HOURS;
+}
+
 /** Airtable table names */
 const MEETING_ROOMS_TABLE = env.AIRTABLE_MEETING_ROOMS_TABLE;
 const BOOKINGS_TABLE = env.AIRTABLE_BOOKINGS_TABLE;
 
 /** Array of public fields to retrieve for meeting rooms (excludes sensitive data) */
-const publicFieldsRooms = ['name', 'capacity', 'notes', 'location', 'status', 'startTime', 'endTime', 'image'];
+const publicFieldsRooms = ['name', 'capacity', 'notes', 'location', 'status', 'startTime', 'endTime', 'image', 'maxMeetingHours'];
 
 /**
  * Retrieves all meeting rooms from Airtable
@@ -378,6 +388,7 @@ function parseRoom(records: { id: string; fields: Record<string, unknown> }[]): 
     startTime: Number(record.fields.startTime || 28800), // 8:00 AM
     endTime: Number(record.fields.endTime || 64800), // 6:00 PM
     image: Array.isArray(record.fields.image) ? record.fields.image[0] : record.fields.image,
+    maxMeetingHours: record.fields.maxMeetingHours ? Number(record.fields.maxMeetingHours) : undefined,
   }));
 }
 

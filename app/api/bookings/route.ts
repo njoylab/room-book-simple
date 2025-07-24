@@ -4,9 +4,9 @@
  * with authentication, validation, rate limiting, and conflict checking.
  */
 
-import { checkBookingConflict, createBooking, getBookings } from '@/lib/airtable';
+import { checkBookingConflict, createBooking, getBookings, getRoomById } from '@/lib/airtable';
 import { getServerUser } from '@/lib/auth_server';
-import { checkRateLimit, createBookingSchema, validateAndSanitize } from '@/lib/validation';
+import { checkRateLimit, createBookingSchema, validateAndSanitize, validateMeetingDuration } from '@/lib/validation';
 import { withErrorHandler, createError } from '@/lib/error-handler';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -71,6 +71,18 @@ async function handleCreateBooking(request: NextRequest) {
 
   // Validazione input con Zod
   const validatedData = validateAndSanitize(createBookingSchema, body);
+
+  // Get room information for duration validation
+  const room = await getRoomById(validatedData.roomId);
+  if (!room) {
+    throw createError.notFound('Room not found');
+  }
+
+  // Validate meeting duration
+  if (!validateMeetingDuration(validatedData.startTime, validatedData.endTime, room)) {
+    const maxHours = room.maxMeetingHours ?? 8; // Default fallback
+    throw createError.validation(`Meeting duration exceeds the maximum allowed time of ${maxHours} hours for this room`);
+  }
 
   const hasConflict = await checkBookingConflict(
     validatedData.roomId,

@@ -59,7 +59,8 @@ Get all meeting rooms.
       "location": "Floor 1",
       "status": "Available",
       "startTime": 28800,
-      "endTime": 64800
+      "endTime": 64800,
+      "maxMeetingHours": 8
     }
   ]
 }
@@ -175,10 +176,15 @@ Create a new booking.
 ```
 
 **Error Responses:**
-- `400 Bad Request` - Invalid booking data
+- `400 Bad Request` - Invalid booking data or meeting duration exceeds maximum allowed time
 - `401 Unauthorized` - User not authenticated
 - `409 Conflict` - Time slot already booked
 - `500 Internal Server Error` - Server error
+
+**Validation Rules:**
+- Meeting duration cannot exceed the room's maximum allowed hours (default: 8 hours, configurable per room)
+- Start time must be before end time
+- Cannot book slots that have already ended
 
 ### PATCH /api/bookings/[id]
 Update a booking (typically to cancel it).

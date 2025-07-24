@@ -5,10 +5,12 @@ import {
   roomIdSchema,
   bookingIdSchema,
   validateAndSanitize,
-  checkRateLimit
+  checkRateLimit,
+  validateMeetingDuration
 } from '../validation'
 import { ZodError } from 'zod'
 import { BOOKING_STATUS } from '../types'
+import { MeetingRoom } from '../types';
 
 describe('Validation', () => {
   // Use future dates to avoid past date validation errors
@@ -294,3 +296,95 @@ describe('Validation', () => {
     })
   })
 })
+
+/**
+ * @fileoverview Tests for validation functions
+ * @description Tests for input validation schemas and utility functions
+ */
+
+describe('validateMeetingDuration', () => {
+  const baseRoom: MeetingRoom = {
+    id: 'room1',
+    name: 'Test Room',
+    capacity: 10,
+    startTime: 28800,
+    endTime: 64800,
+    image: null
+  };
+
+  it('should return true for valid meeting duration within global limit', () => {
+    const startTime = '2024-01-01T09:00:00.000Z';
+    const endTime = '2024-01-01T17:00:00.000Z'; // 8 hours
+    
+    expect(validateMeetingDuration(startTime, endTime, baseRoom)).toBe(true);
+  });
+
+  it('should return false for meeting duration exceeding global limit', () => {
+    const startTime = '2024-01-01T09:00:00.000Z';
+    const endTime = '2024-01-01T19:00:00.000Z'; // 10 hours
+    
+    expect(validateMeetingDuration(startTime, endTime, baseRoom)).toBe(false);
+  });
+
+  it('should return true for meeting duration within room-specific limit', () => {
+    const roomWithCustomLimit: MeetingRoom = {
+      ...baseRoom,
+      maxMeetingHours: 4
+    };
+    
+    const startTime = '2024-01-01T09:00:00.000Z';
+    const endTime = '2024-01-01T13:00:00.000Z'; // 4 hours
+    
+    expect(validateMeetingDuration(startTime, endTime, roomWithCustomLimit)).toBe(true);
+  });
+
+  it('should return false for meeting duration exceeding room-specific limit', () => {
+    const roomWithCustomLimit: MeetingRoom = {
+      ...baseRoom,
+      maxMeetingHours: 4
+    };
+    
+    const startTime = '2024-01-01T09:00:00.000Z';
+    const endTime = '2024-01-01T15:00:00.000Z'; // 6 hours
+    
+    expect(validateMeetingDuration(startTime, endTime, roomWithCustomLimit)).toBe(false);
+  });
+
+  it('should handle edge case of exactly maximum duration', () => {
+    const startTime = '2024-01-01T09:00:00.000Z';
+    const endTime = '2024-01-01T17:00:00.000Z'; // Exactly 8 hours
+    
+    expect(validateMeetingDuration(startTime, endTime, baseRoom)).toBe(true);
+  });
+
+  it('should handle very short meetings', () => {
+    const startTime = '2024-01-01T09:00:00.000Z';
+    const endTime = '2024-01-01T09:30:00.000Z'; // 30 minutes
+    
+    expect(validateMeetingDuration(startTime, endTime, baseRoom)).toBe(true);
+  });
+
+  it('should handle room with very short limit', () => {
+    const roomWithShortLimit: MeetingRoom = {
+      ...baseRoom,
+      maxMeetingHours: 1
+    };
+    
+    const startTime = '2024-01-01T09:00:00.000Z';
+    const endTime = '2024-01-01T10:00:00.000Z'; // Exactly 1 hour
+    
+    expect(validateMeetingDuration(startTime, endTime, roomWithShortLimit)).toBe(true);
+  });
+
+  it('should return false for meeting exceeding very short limit', () => {
+    const roomWithShortLimit: MeetingRoom = {
+      ...baseRoom,
+      maxMeetingHours: 1
+    };
+    
+    const startTime = '2024-01-01T09:00:00.000Z';
+    const endTime = '2024-01-01T10:30:00.000Z'; // 1.5 hours
+    
+    expect(validateMeetingDuration(startTime, endTime, roomWithShortLimit)).toBe(false);
+  });
+});
