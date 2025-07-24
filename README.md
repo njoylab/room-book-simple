@@ -65,6 +65,7 @@ Before running this application, you'll need:
    - `status` (Single select) - Options: "Available", "Unavailable"
    - `startTime` (Number) - Opening time in seconds from midnight (default: 28800 = 8:00 AM)
    - `endTime` (Number) - Closing time in seconds from midnight (default: 64800 = 6:00 PM)
+   - `maxMeetingHours` (Number) - Maximum meeting duration in hours (optional - overrides global setting)
    - `image` (Attachment) - Optional room photos
 
 4. **Create the Bookings table** with these fields:
@@ -80,6 +81,12 @@ Before running this application, you'll need:
    - Go to [airtable.com/api](https://airtable.com/api)
    - Select your base to get the Base ID
    - Create a personal access token at [airtable.com/create/tokens](https://airtable.com/create/tokens)
+
+**Note on Meeting Duration Limits**: 
+- The `maxMeetingHours` field in the Meeting Rooms table is optional
+- If not set, the room will use the global `MAX_MEETING_HOURS` environment variable
+- If set, it overrides the global setting for that specific room
+- Example: Set `maxMeetingHours` to `2` for a small meeting room that should only allow 2-hour meetings
 
 ### 2. Slack App Configuration
 
@@ -160,7 +167,7 @@ NODE_ENV=development                                  # Default: "development"
 - `SESSION_DURATION_HOURS` - Session duration in hours (1-168, default: 168 = 7 days)
 - `APP_TITLE` - Application title (default: "B4I")
 - `UPCOMING_MEETINGS_HOURS` - Hours to look ahead for upcoming meetings (0-168). If not set, defaults to showing meetings until end of current day
-- `MAX_MEETING_HOURS` - Maximum meeting duration in hours (1-24, default: 8). Can be overridden per room in Airtable
+- `MAX_MEETING_HOURS` - Maximum meeting duration in hours (1-24, default: 8). Can be overridden per room using the `maxMeetingHours` field in Airtable
 - `APP_BASE_URL` - Base URL for OAuth redirects (auto-detected if not set)
 - `NODE_ENV` - Environment mode (default: "development")
 
