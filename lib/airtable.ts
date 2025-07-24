@@ -9,6 +9,15 @@ import { env } from './env';
 import { BOOKING_STATUS, Booking, MeetingRoom } from './types';
 
 /**
+ * Checks if we're in build mode with mock environment variables
+ * @returns {boolean} True if we're in build mode
+ */
+function isBuildMode(): boolean {
+  return process.env.NODE_ENV === 'production' &&
+    env.AIRTABLE_API_KEY === 'valid_airtable_api_key_123456789';
+}
+
+/**
  * Gets the maximum meeting duration in hours for a specific room
  * @param room - The meeting room object
  * @returns {number} Maximum meeting duration in hours (room-specific or global default)
@@ -38,6 +47,10 @@ const publicFieldsRooms = ['name', 'capacity', 'notes', 'location', 'status', 's
  * ```
  */
 export async function getMeetingRooms(): Promise<MeetingRoom[]> {
+  if (isBuildMode()) {
+    return [];
+  }
+
   const records = await fetchAllRecords(MEETING_ROOMS_TABLE, {
     fields: publicFieldsRooms,
     sort: [{ field: 'name', direction: 'asc' }]
@@ -104,6 +117,10 @@ export async function getRoomBookings(roomId: string): Promise<Booking[]> {
  * ```
  */
 export async function getUserFutureBookings(userId: string): Promise<Booking[]> {
+  if (isBuildMode()) {
+    return [];
+  }
+
   const validUserId = validateUserId(userId);
   const now = new Date();
 
@@ -171,6 +188,10 @@ export async function getBookingsForDate(roomId: string, selectedDate: Date): Pr
  * ```
  */
 export async function getRoomById(id: string): Promise<MeetingRoom | null> {
+  if (isBuildMode()) {
+    return null;
+  }
+
   try {
     const validId = validateRoomId(id);
     const record = await fetchRecord(MEETING_ROOMS_TABLE, validId);
@@ -297,6 +318,10 @@ export async function checkBookingConflict(
  * ```
  */
 export async function getUpcomingBookings(): Promise<Booking[]> {
+  if (isBuildMode()) {
+    return [];
+  }
+
   const now = new Date();
 
   let futureTime: Date;
