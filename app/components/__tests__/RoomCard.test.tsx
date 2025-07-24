@@ -280,4 +280,43 @@ describe('RoomCard', () => {
     expect(screen.getByText('20')).toBeInTheDocument()
     expect(screen.getByText('people')).toBeInTheDocument()
   })
+
+  it('should render room tags when provided', () => {
+    const roomWithTags = {
+      ...mockRoom,
+      tags: ['Conference', 'Video Call', 'Large'],
+    }
+    
+    render(<RoomCard {...defaultProps} room={roomWithTags} />)
+    
+    expect(screen.getByText('Conference')).toBeInTheDocument()
+    expect(screen.getByText('Video Call')).toBeInTheDocument()
+    expect(screen.getByText('Large')).toBeInTheDocument()
+  })
+
+  it('should not render tags section when tags are not provided', () => {
+    const roomWithoutTags = {
+      ...mockRoom,
+      tags: undefined,
+    }
+    
+    render(<RoomCard {...defaultProps} room={roomWithoutTags} />)
+    
+    // Should still render the room card but not show any tag elements
+    expect(screen.getByText('Conference Room A')).toBeInTheDocument()
+    expect(screen.queryByText('Conference')).not.toBeInTheDocument()
+  })
+
+  it('should handle empty tags array', () => {
+    const roomWithEmptyTags = {
+      ...mockRoom,
+      tags: [],
+    }
+    
+    render(<RoomCard {...defaultProps} room={roomWithEmptyTags} />)
+    
+    // Should render the room card but not show any tag elements
+    expect(screen.getByText('Conference Room A')).toBeInTheDocument()
+    expect(screen.queryByText('Conference')).not.toBeInTheDocument()
+  })
 })
