@@ -9,6 +9,7 @@ A modern, responsive meeting room booking application built with Next.js 15, fea
 - **Room-specific hours** - Custom operating hours for each room
 - **Capacity and location** information display
 - **Room status management** - Unavailable rooms prevent new bookings while showing existing ones
+- **Room tagging system** - Categorize rooms with tags for easy identification and grouping
 
 ### 📅 Booking System
 - **30-minute time slots** with visual availability indicators
@@ -67,6 +68,7 @@ Before running this application, you'll need:
    - `endTime` (Number) - Closing time in seconds from midnight (default: 64800 = 6:00 PM)
    - `maxMeetingHours` (Number) - Maximum meeting duration in hours (optional - overrides global setting)
    - `image` (Attachment) - Optional room photos
+   - `tags` (Multiple select) - Optional tags for grouping rooms (e.g., "Conference", "Video Call", "Large", "Small", "Quiet", "Whiteboard")
 
 4. **Create the Bookings table** with these fields:
    - `user` (Single line text) - Slack user ID
@@ -89,6 +91,13 @@ Before running this application, you'll need:
 - **Supports decimal values** for precise duration limits (e.g., `1.5` for 90 minutes, `0.5` for 30 minutes)
 - Example: Set `maxMeetingHours` to `2` for a small meeting room that should only allow 2-hour meetings
 - Example: Set `maxMeetingHours` to `1.5` for a room that should only allow 90-minute meetings
+
+**Note on Room Tags**: 
+- The `tags` field uses Airtable's "Multiple Select" type for easy room categorization
+- Tags are displayed as styled badges on room cards for quick visual identification
+- Suggested tags: "Conference", "Video Call", "Large", "Small", "Quiet", "Whiteboard", "Projector", "Training"
+- Tags are optional - rooms without tags will display normally
+- You can customize the available tag options in your Airtable base settings
 
 ### 2. Slack App Configuration
 
