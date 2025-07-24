@@ -388,6 +388,56 @@ describe('validateMeetingDuration', () => {
     
     expect(validateMeetingDuration(startTime, endTime, roomWithShortLimit)).toBe(false);
   });
+
+  it('should handle decimal maxMeetingHours values', () => {
+    const roomWithDecimalLimit: MeetingRoom = {
+      ...baseRoom,
+      maxMeetingHours: 1.5 // 90 minutes
+    };
+    
+    // Test 1: Meeting within limit (1 hour = 60 minutes)
+    const startTime1 = '2024-01-01T09:00:00.000Z';
+    const endTime1 = '2024-01-01T10:00:00.000Z'; // 1 hour
+    
+    expect(validateMeetingDuration(startTime1, endTime1, roomWithDecimalLimit)).toBe(true);
+    
+    // Test 2: Meeting exactly at limit (1.5 hours = 90 minutes)
+    const startTime2 = '2024-01-01T09:00:00.000Z';
+    const endTime2 = '2024-01-01T10:30:00.000Z'; // 1.5 hours
+    
+    expect(validateMeetingDuration(startTime2, endTime2, roomWithDecimalLimit)).toBe(true);
+    
+    // Test 3: Meeting exceeding limit (2 hours = 120 minutes)
+    const startTime3 = '2024-01-01T09:00:00.000Z';
+    const endTime3 = '2024-01-01T11:00:00.000Z'; // 2 hours
+    
+    expect(validateMeetingDuration(startTime3, endTime3, roomWithDecimalLimit)).toBe(false);
+  });
+
+  it('should handle very short decimal limits', () => {
+    const roomWithVeryShortLimit: MeetingRoom = {
+      ...baseRoom,
+      maxMeetingHours: 0.5 // 30 minutes
+    };
+    
+    // Test 1: Meeting within limit (15 minutes)
+    const startTime1 = '2024-01-01T09:00:00.000Z';
+    const endTime1 = '2024-01-01T09:15:00.000Z'; // 15 minutes
+    
+    expect(validateMeetingDuration(startTime1, endTime1, roomWithVeryShortLimit)).toBe(true);
+    
+    // Test 2: Meeting exactly at limit (30 minutes)
+    const startTime2 = '2024-01-01T09:00:00.000Z';
+    const endTime2 = '2024-01-01T09:30:00.000Z'; // 30 minutes
+    
+    expect(validateMeetingDuration(startTime2, endTime2, roomWithVeryShortLimit)).toBe(true);
+    
+    // Test 3: Meeting exceeding limit (45 minutes)
+    const startTime3 = '2024-01-01T09:00:00.000Z';
+    const endTime3 = '2024-01-01T09:45:00.000Z'; // 45 minutes
+    
+    expect(validateMeetingDuration(startTime3, endTime3, roomWithVeryShortLimit)).toBe(false);
+  });
 });
 
 describe('validateOperatingHours', () => {

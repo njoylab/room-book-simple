@@ -26,7 +26,7 @@ Set the `MAX_MEETING_HOURS` environment variable to define the default maximum d
 MAX_MEETING_HOURS=8  # Default: 8 hours (1-24 range)
 ```
 
-**Valid values**: 1-24 hours
+**Valid values**: 1-24 hours (supports decimal values for precise limits)
 **Default**: 8 hours
 
 ## Airtable Configuration
@@ -50,7 +50,21 @@ To set a custom maximum duration for a specific room, add a `maxMeetingHours` fi
 | `capacity` | 10 | Maximum capacity |
 | `startTime` | 28800 | Opening time (8:00 AM) |
 | `endTime` | 64800 | Closing time (6:00 PM) |
-| `maxMeetingHours` | 4 | **Custom limit: 4 hours** |
+| `maxMeetingHours` | 1.5 | **Custom limit: 90 minutes** |
+
+### Common Duration Conversions
+
+| Duration | `maxMeetingHours` | Use Case |
+|----------|-------------------|----------|
+| 30 minutes | `0.5` | Quick standup meetings |
+| 45 minutes | `0.75` | Short team meetings |
+| 60 minutes | `1` | Standard meetings |
+| 90 minutes | `1.5` | Extended meetings |
+| 2 hours | `2` | Long meetings |
+| 2.5 hours | `2.5` | Workshops |
+| 3 hours | `3` | Training sessions |
+| 4 hours | `4` | Half-day sessions |
+| 6 hours | `6` | Full-day workshops |
 
 ## Operating Hours Configuration
 
@@ -214,6 +228,35 @@ const validBooking = {
 const invalidBooking = {
   startTime: '2024-01-01T09:00:00.000Z',
   endTime: '2024-01-01T12:00:00.000Z'
+};
+```
+
+### Decimal Values Test
+
+```typescript
+// Test room with decimal limit (90 minutes)
+const testRoom = {
+  id: 'test-room',
+  name: 'Test Room',
+  maxMeetingHours: 1.5 // 90 minutes
+};
+
+// This should pass (60 minutes meeting)
+const validBooking = {
+  startTime: '2024-01-01T09:00:00.000Z',
+  endTime: '2024-01-01T10:00:00.000Z'
+};
+
+// This should pass (90 minutes meeting - exactly at limit)
+const exactBooking = {
+  startTime: '2024-01-01T09:00:00.000Z',
+  endTime: '2024-01-01T10:30:00.000Z'
+};
+
+// This should fail (120 minutes meeting)
+const invalidBooking = {
+  startTime: '2024-01-01T09:00:00.000Z',
+  endTime: '2024-01-01T11:00:00.000Z'
 };
 ```
 
