@@ -84,15 +84,16 @@ describe('/api/bookings', () => {
     const mockUser = {
       id: 'user123',
       name: 'John Doe',
+      email: 'john@example.com',
       image: 'https://example.com/avatar.jpg',
       team: 'Engineering',
     }
 
     const validBookingData = {
       roomId: 'recABCDEFGHIJKLMNOP',
-      startTime: '2024-06-15T10:00:00.000Z',
-      endTime: '2024-06-15T11:00:00.000Z',
-      note: 'Team meeting',
+      startTime: '2024-01-01T10:00:00.000Z',
+      endTime: '2024-01-01T11:00:00.000Z',
+      note: 'Test booking',
     }
 
     const mockCookies = new Map()
@@ -108,7 +109,8 @@ describe('/api/bookings', () => {
         capacity: 10,
         startTime: 28800,
         endTime: 64800,
-        image: null
+        image: null,
+        maxMeetingHours: 4 // Room con limite personalizzato di 4 ore
       })
       ;(validateMeetingDuration as jest.Mock).mockReturnValue(true)
       ;(validateOperatingHours as jest.Mock).mockReturnValue(true)
@@ -241,7 +243,8 @@ describe('/api/bookings', () => {
         capacity: 10,
         startTime: 28800,
         endTime: 64800,
-        image: null
+        image: null,
+        maxMeetingHours: 4 // Room con limite personalizzato di 4 ore
       })
       ;(validateMeetingDuration as jest.Mock).mockReturnValue(true)
       ;(validateOperatingHours as jest.Mock).mockReturnValue(true)
@@ -278,7 +281,8 @@ describe('/api/bookings', () => {
         capacity: 10,
         startTime: 28800,
         endTime: 64800,
-        image: null
+        image: null,
+        maxMeetingHours: 4 // Room con limite personalizzato di 4 ore
       })
       ;(validateMeetingDuration as jest.Mock).mockReturnValue(true)
       ;(validateOperatingHours as jest.Mock).mockReturnValue(true)
@@ -311,7 +315,8 @@ describe('/api/bookings', () => {
         capacity: 10,
         startTime: 28800,
         endTime: 64800,
-        image: null
+        image: null,
+        maxMeetingHours: 4 // Room con limite personalizzato di 4 ore
       })
       ;(validateMeetingDuration as jest.Mock).mockReturnValue(true)
       ;(validateOperatingHours as jest.Mock).mockReturnValue(true)
@@ -371,7 +376,8 @@ describe('/api/bookings', () => {
         capacity: 10,
         startTime: 28800,
         endTime: 64800,
-        image: null
+        image: null,
+        maxMeetingHours: 4 // Room con limite personalizzato di 4 ore
       })
       ;(validateMeetingDuration as jest.Mock).mockReturnValue(true)
       ;(validateOperatingHours as jest.Mock).mockReturnValue(true)
@@ -395,6 +401,193 @@ describe('/api/bookings', () => {
 
       expect(checkRateLimit).toHaveBeenCalledWith('booking_user123_192.168.1.1', 10, 60000)
       expect(response.status).toBe(201)
+    })
+  })
+
+  describe('POST /api/bookings - maxMeetingHours scenarios', () => {
+    const mockUser = {
+      id: 'user123',
+      name: 'John Doe',
+      email: 'john@example.com',
+      image: 'https://example.com/avatar.jpg',
+      team: 'Engineering',
+    }
+
+    const validBookingData = {
+      roomId: 'recABCDEFGHIJKLMNOP',
+      startTime: '2024-01-01T10:00:00.000Z',
+      endTime: '2024-01-01T11:00:00.000Z',
+      note: 'Test booking',
+    }
+
+    const mockCookies = new Map()
+    mockCookies.set('auth-token', 'valid-token')
+
+    it('should handle room without custom maxMeetingHours (uses global default)', async () => {
+      ;(getServerUser as jest.Mock).mockResolvedValue(mockUser)
+      ;(checkRateLimit as jest.Mock).mockReturnValue(true)
+      ;(validateAndSanitize as jest.Mock).mockReturnValue(validBookingData)
+      ;(getRoomById as jest.Mock).mockResolvedValue({
+        id: 'recABCDEFGHIJKLMNOP',
+        name: 'Test Room',
+        capacity: 10,
+        startTime: 28800,
+        endTime: 64800,
+        image: null
+        // maxMeetingHours non specificato - usa il default globale
+      })
+      ;(validateMeetingDuration as jest.Mock).mockReturnValue(true)
+      ;(validateOperatingHours as jest.Mock).mockReturnValue(true)
+      ;(checkBookingConflict as jest.Mock).mockResolvedValue(false)
+      ;(createBooking as jest.Mock).mockResolvedValue({ id: 'booking123' })
+
+      const request = new NextRequest('http://localhost:3000/api/bookings', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-forwarded-for': '127.0.0.1',
+        },
+        body: JSON.stringify(validBookingData),
+      })
+
+      Object.defineProperty(request, 'cookies', {
+        value: mockCookies,
+      })
+
+      const response = await POST(request)
+
+      expect(response.status).toBe(201)
+      expect(validateMeetingDuration).toHaveBeenCalledWith(
+        validBookingData.startTime,
+        validBookingData.endTime,
+        expect.objectContaining({
+          id: 'recABCDEFGHIJKLMNOP',
+          name: 'Test Room',
+          capacity: 10,
+          startTime: 28800,
+          endTime: 64800,
+          image: null
+          // maxMeetingHours non è presente nell'oggetto
+        })
+      )
+    })
+
+    it('should handle room with custom maxMeetingHours', async () => {
+      ;(getServerUser as jest.Mock).mockResolvedValue(mockUser)
+      ;(checkRateLimit as jest.Mock).mockReturnValue(true)
+      ;(validateAndSanitize as jest.Mock).mockReturnValue(validBookingData)
+      ;(getRoomById as jest.Mock).mockResolvedValue({
+        id: 'recABCDEFGHIJKLMNOP',
+        name: 'Test Room',
+        capacity: 10,
+        startTime: 28800,
+        endTime: 64800,
+        image: null,
+        maxMeetingHours: 2 // Limite personalizzato di 2 ore
+      })
+      ;(validateMeetingDuration as jest.Mock).mockReturnValue(true)
+      ;(validateOperatingHours as jest.Mock).mockReturnValue(true)
+      ;(checkBookingConflict as jest.Mock).mockResolvedValue(false)
+      ;(createBooking as jest.Mock).mockResolvedValue({ id: 'booking123' })
+
+      const request = new NextRequest('http://localhost:3000/api/bookings', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-forwarded-for': '127.0.0.1',
+        },
+        body: JSON.stringify(validBookingData),
+      })
+
+      Object.defineProperty(request, 'cookies', {
+        value: mockCookies,
+      })
+
+      const response = await POST(request)
+
+      expect(response.status).toBe(201)
+      expect(validateMeetingDuration).toHaveBeenCalledWith(
+        validBookingData.startTime,
+        validBookingData.endTime,
+        expect.objectContaining({
+          id: 'recABCDEFGHIJKLMNOP',
+          maxMeetingHours: 2
+        })
+      )
+    })
+
+    it('should return 400 when meeting duration exceeds room limit', async () => {
+      ;(getServerUser as jest.Mock).mockResolvedValue(mockUser)
+      ;(checkRateLimit as jest.Mock).mockReturnValue(true)
+      ;(validateAndSanitize as jest.Mock).mockReturnValue(validBookingData)
+      ;(getRoomById as jest.Mock).mockResolvedValue({
+        id: 'recABCDEFGHIJKLMNOP',
+        name: 'Test Room',
+        capacity: 10,
+        startTime: 28800,
+        endTime: 64800,
+        image: null,
+        maxMeetingHours: 1 // Limite di 1 ora
+      })
+      ;(validateMeetingDuration as jest.Mock).mockReturnValue(false) // Durata eccessiva
+      ;(validateOperatingHours as jest.Mock).mockReturnValue(true)
+
+      const request = new NextRequest('http://localhost:3000/api/bookings', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-forwarded-for': '127.0.0.1',
+        },
+        body: JSON.stringify(validBookingData),
+      })
+
+      Object.defineProperty(request, 'cookies', {
+        value: mockCookies,
+      })
+
+      const response = await POST(request)
+
+      expect(response.status).toBe(400)
+      const responseData = await response.json()
+      expect(responseData).toHaveProperty('error', 'Meeting duration exceeds the maximum allowed time of 1 hours for this room')
+      expect(responseData).toHaveProperty('type', 'VALIDATION_ERROR')
+    })
+
+    it('should return 400 when meeting duration exceeds global default', async () => {
+      ;(getServerUser as jest.Mock).mockResolvedValue(mockUser)
+      ;(checkRateLimit as jest.Mock).mockReturnValue(true)
+      ;(validateAndSanitize as jest.Mock).mockReturnValue(validBookingData)
+      ;(getRoomById as jest.Mock).mockResolvedValue({
+        id: 'recABCDEFGHIJKLMNOP',
+        name: 'Test Room',
+        capacity: 10,
+        startTime: 28800,
+        endTime: 64800,
+        image: null
+        // maxMeetingHours non specificato - usa il default globale (8 ore)
+      })
+      ;(validateMeetingDuration as jest.Mock).mockReturnValue(false) // Durata eccessiva
+      ;(validateOperatingHours as jest.Mock).mockReturnValue(true)
+
+      const request = new NextRequest('http://localhost:3000/api/bookings', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-forwarded-for': '127.0.0.1',
+        },
+        body: JSON.stringify(validBookingData),
+      })
+
+      Object.defineProperty(request, 'cookies', {
+        value: mockCookies,
+      })
+
+      const response = await POST(request)
+
+      expect(response.status).toBe(400)
+      const responseData = await response.json()
+      expect(responseData).toHaveProperty('error', 'Meeting duration exceeds the maximum allowed time of 8 hours for this room')
+      expect(responseData).toHaveProperty('type', 'VALIDATION_ERROR')
     })
   })
 })
