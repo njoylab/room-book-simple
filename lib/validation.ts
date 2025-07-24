@@ -28,6 +28,58 @@ export function validateMeetingDuration(startTime: string, endTime: string, room
 }
 
 /**
+ * Validates that a booking is within the room's operating hours
+ * @param startTime - ISO 8601 datetime string for booking start
+ * @param endTime - ISO 8601 datetime string for booking end
+ * @param room - The meeting room object
+ * @returns {boolean} True if booking is within operating hours, false otherwise
+ * @description Checks if the booking start and end times fall within the room's operating hours
+ */
+export function validateOperatingHours(startTime: string, endTime: string, room: MeetingRoom): boolean {
+  const start = new Date(startTime);
+  const end = new Date(endTime);
+  
+  // Get the date part for the booking start
+  const bookingStartDate = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  
+  // Calculate room opening and closing times for the booking start date
+  const roomOpenTime = new Date(bookingStartDate);
+  roomOpenTime.setSeconds(room.startTime);
+  
+  const roomCloseTime = new Date(bookingStartDate);
+  roomCloseTime.setSeconds(room.endTime);
+  
+  // Handle rooms that operate 24 hours (startTime = 0, endTime = 86400)
+  if (room.startTime === 0 && room.endTime === 86400) {
+    // 24-hour room - any booking is valid
+    return true;
+  }
+  
+  // Handle rooms that operate past midnight
+  if (room.endTime <= room.startTime && room.startTime !== 0) {
+    // Room operates past midnight (e.g., 6 PM to 1 AM)
+    // Check if booking starts after opening time
+    const bookingStartsAfterOpen = start >= roomOpenTime;
+    
+    // For end time, check if it's before closing time of the end date
+    const bookingEndDate = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+    const roomCloseTimeEndDay = new Date(bookingEndDate);
+    roomCloseTimeEndDay.setSeconds(room.endTime);
+    
+    const bookingEndsBeforeClose = end <= roomCloseTimeEndDay;
+    
+    return bookingStartsAfterOpen && bookingEndsBeforeClose;
+  } else {
+    // Standard operating hours (e.g., 8 AM to 6 PM)
+    // Check if booking starts and ends within the same day's operating hours
+    const bookingStartsAfterOpen = start >= roomOpenTime;
+    const bookingEndsBeforeClose = end <= roomCloseTime;
+    
+    return bookingStartsAfterOpen && bookingEndsBeforeClose;
+  }
+}
+
+/**
  * Validation schema for creating new room bookings
  * @description Validates all required fields for booking creation including room ID,
  * time range validation, note length limits, and business logic constraints like

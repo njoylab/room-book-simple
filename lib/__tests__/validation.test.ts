@@ -1,12 +1,13 @@
-import {
-  createBookingSchema,
-  updateBookingSchema,
-  dateSchema,
+import { 
+  createBookingSchema, 
+  updateBookingSchema, 
+  dateSchema, 
   roomIdSchema,
   bookingIdSchema,
   validateAndSanitize,
   checkRateLimit,
-  validateMeetingDuration
+  validateMeetingDuration,
+  validateOperatingHours
 } from '../validation'
 import { ZodError } from 'zod'
 import { BOOKING_STATUS } from '../types'
@@ -386,5 +387,110 @@ describe('validateMeetingDuration', () => {
     const endTime = '2024-01-01T10:30:00.000Z'; // 1.5 hours
     
     expect(validateMeetingDuration(startTime, endTime, roomWithShortLimit)).toBe(false);
+  });
+});
+
+describe('validateOperatingHours', () => {
+  const baseRoom: MeetingRoom = {
+    id: 'room1',
+    name: 'Test Room',
+    capacity: 10,
+    startTime: 28800, // 8:00 AM
+    endTime: 64800,   // 6:00 PM
+    image: null
+  };
+
+  it('should return true for booking within operating hours', () => {
+    const startTime = '2024-01-01T09:00:00.000Z'; // 9:00 AM
+    const endTime = '2024-01-01T10:00:00.000Z';   // 10:00 AM
+    
+    expect(validateOperatingHours(startTime, endTime, baseRoom)).toBe(true);
+  });
+
+  it('should return false for booking starting before opening time', () => {
+    const startTime = '2024-01-01T07:00:00.000Z'; // 7:00 AM (before 8:00 AM)
+    const endTime = '2024-01-01T09:00:00.000Z';   // 9:00 AM
+    
+    expect(validateOperatingHours(startTime, endTime, baseRoom)).toBe(false);
+  });
+
+  it('should return false for booking ending after closing time', () => {
+    const startTime = '2024-01-01T17:00:00.000Z'; // 5:00 PM
+    const endTime = '2024-01-01T19:00:00.000Z';   // 7:00 PM (after 6:00 PM)
+    
+    expect(validateOperatingHours(startTime, endTime, baseRoom)).toBe(false);
+  });
+
+  it('should return false for booking spanning outside operating hours', () => {
+    const startTime = '2024-01-01T17:00:00.000Z'; // 5:00 PM
+    const endTime = '2024-01-01T20:00:00.000Z';   // 8:00 PM (after 6:00 PM)
+    
+    expect(validateOperatingHours(startTime, endTime, baseRoom)).toBe(false);
+  });
+
+  it('should return true for booking exactly at opening time', () => {
+    const startTime = '2024-01-01T08:00:00.000Z'; // Exactly 8:00 AM
+    const endTime = '2024-01-01T09:00:00.000Z';   // 9:00 AM
+    
+    expect(validateOperatingHours(startTime, endTime, baseRoom)).toBe(true);
+  });
+
+  it('should return true for booking ending exactly at closing time', () => {
+    const startTime = '2024-01-01T17:00:00.000Z'; // 5:00 PM
+    const endTime = '2024-01-01T18:00:00.000Z';   // Exactly 6:00 PM
+    
+    expect(validateOperatingHours(startTime, endTime, baseRoom)).toBe(true);
+  });
+
+  it('should handle room with non-standard hours', () => {
+    const nightRoom: MeetingRoom = {
+      ...baseRoom,
+      startTime: 64800, // 6:00 PM
+      endTime: 86400,   // 12:00 AM (midnight)
+    };
+    
+    const startTime = '2024-01-01T20:00:00.000Z'; // 8:00 PM
+    const endTime = '2024-01-01T22:00:00.000Z';   // 10:00 PM
+    
+    expect(validateOperatingHours(startTime, endTime, nightRoom)).toBe(true);
+  });
+
+  it('should handle room with 24-hour operation', () => {
+    const allDayRoom: MeetingRoom = {
+      ...baseRoom,
+      startTime: 0,     // 12:00 AM (midnight)
+      endTime: 86400,   // 12:00 AM (next day)
+    };
+    
+    const startTime = '2024-01-01T23:00:00.000Z'; // 11:00 PM
+    const endTime = '2024-01-02T01:00:00.000Z';   // 1:00 AM next day
+    
+    expect(validateOperatingHours(startTime, endTime, allDayRoom)).toBe(true);
+  });
+
+  it('should handle booking spanning midnight', () => {
+    const lateRoom: MeetingRoom = {
+      ...baseRoom,
+      startTime: 64800, // 6:00 PM
+      endTime: 3600,    // 1:00 AM next day
+    };
+    
+    const startTime = '2024-01-01T23:00:00.000Z'; // 11:00 PM
+    const endTime = '2024-01-02T00:30:00.000Z';   // 12:30 AM next day
+    
+    expect(validateOperatingHours(startTime, endTime, lateRoom)).toBe(true);
+  });
+
+  it('should return false for booking outside late night hours', () => {
+    const lateRoom: MeetingRoom = {
+      ...baseRoom,
+      startTime: 64800, // 6:00 PM
+      endTime: 3600,    // 1:00 AM next day
+    };
+    
+    const startTime = '2024-01-01T14:00:00.000Z'; // 2:00 PM (before 6:00 PM)
+    const endTime = '2024-01-01T15:00:00.000Z';   // 3:00 PM
+    
+    expect(validateOperatingHours(startTime, endTime, lateRoom)).toBe(false);
   });
 });

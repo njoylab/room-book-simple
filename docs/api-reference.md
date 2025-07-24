@@ -183,6 +183,7 @@ Create a new booking.
 
 **Validation Rules:**
 - Meeting duration cannot exceed the room's maximum allowed hours (default: 8 hours, configurable per room)
+- Booking must be within the room's operating hours
 - Start time must be before end time
 - Cannot book slots that have already ended
 
