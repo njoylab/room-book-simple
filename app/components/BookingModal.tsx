@@ -185,6 +185,7 @@ export function BookingModal({ room, isOpen, initialDate, onClose, onSuccess, pr
     const slot = slots[slotIndex];
     if (!slot.available) return false;
     if (selectedSlots.includes(slotIndex)) return true;
+    
     // If no slots selected, any available slot is selectable
     if (selectedSlots.length === 0) return true;
 
@@ -194,7 +195,17 @@ export function BookingModal({ room, isOpen, initialDate, onClose, onSuccess, pr
     const maxSelected = sortedSelected[sortedSelected.length - 1];
 
     // Slot is selectable if it's adjacent to the current selection range
-    return slotIndex === minSelected - 1 || slotIndex === maxSelected + 1;
+    const isAdjacent = slotIndex === minSelected - 1 || slotIndex === maxSelected + 1;
+    
+    if (!isAdjacent) return false;
+    
+    // If adjacent, check if adding this slot would exceed the maximum duration
+    const newSelection = [...selectedSlots, slotIndex].sort((a, b) => a - b);
+    const totalMinutes = newSelection.length * 30; // Each slot is 30 minutes
+    const maxHours = room.maxMeetingHours ?? 8; // Default to 8 hours if not set
+    const maxMinutes = maxHours * 60;
+    
+    return totalMinutes <= maxMinutes;
   };
 
   const handleSlotToggle = (slotIndex: number) => {
@@ -216,7 +227,7 @@ export function BookingModal({ room, isOpen, initialDate, onClose, onSuccess, pr
         }
         return prev; // Don't remove if not at edge
       } else {
-        // Add slot only if it's selectable (adjacent)
+        // Add slot only if it's selectable (adjacent and within max duration)
         if (isSlotSelectable(slotIndex)) {
           return [...prev, slotIndex].sort((a, b) => a - b);
         }
@@ -369,6 +380,11 @@ export function BookingModal({ room, isOpen, initialDate, onClose, onSuccess, pr
                   {(room.startTime || room.endTime) && (
                     <div className="text-xs text-gray-500 bg-white px-3 py-1 rounded-full border">
                       {formatTime(room.startTime)} - {formatTime(room.endTime)}
+                    </div>
+                  )}
+                  {room.maxMeetingHours && (
+                    <div className="text-xs text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
+                      Max {room.maxMeetingHours} {room.maxMeetingHours === 1 ? 'hour' : 'hours'} per booking
                     </div>
                   )}
                 </div>

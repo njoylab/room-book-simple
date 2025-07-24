@@ -116,3 +116,4 @@ export function formatSlotTime(isoString: string): string {
     hour12: false
   });
 }
+

@@ -74,7 +74,7 @@ export default async function BookRoomPage({ params, searchParams }: PageProps) 
 
             {/* Room Details */}
             <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
                 {/* Capacity */}
                 <div className="flex items-center p-4 bg-primary/5 rounded-lg border border-primary/10">
@@ -121,6 +121,24 @@ export default async function BookRoomPage({ params, searchParams }: PageProps) 
                     </p>
                   </div>
                 </div>
+
+                {/* Max Meeting Duration */}
+                {room.maxMeetingHours && (
+                  <div className="flex items-center p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="flex-shrink-0">
+                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-lg font-semibold text-blue-700">
+                        Max {room.maxMeetingHours} {room.maxMeetingHours === 1 ? 'hour' : 'hours'}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
 
             </div>
