@@ -20,11 +20,12 @@ jest.mock('@/lib/validation', () => ({
   },
   validateAndSanitize: jest.fn(),
   validateMeetingDuration: jest.fn(),
+  validateOperatingHours: jest.fn(),
 }))
 
 import { checkBookingConflict, createBooking, getBookings, getRoomById } from '@/lib/airtable'
 import { getServerUser } from '@/lib/auth_server'
-import { checkRateLimit, validateAndSanitize, validateMeetingDuration } from '@/lib/validation'
+import { checkRateLimit, validateAndSanitize, validateMeetingDuration, validateOperatingHours } from '@/lib/validation'
 
 describe('/api/bookings', () => {
   beforeEach(() => {
@@ -110,6 +111,7 @@ describe('/api/bookings', () => {
         image: null
       })
       ;(validateMeetingDuration as jest.Mock).mockReturnValue(true)
+      ;(validateOperatingHours as jest.Mock).mockReturnValue(true)
       ;(checkBookingConflict as jest.Mock).mockResolvedValue(false)
       
       const mockCreatedBooking = {
@@ -242,6 +244,7 @@ describe('/api/bookings', () => {
         image: null
       })
       ;(validateMeetingDuration as jest.Mock).mockReturnValue(true)
+      ;(validateOperatingHours as jest.Mock).mockReturnValue(true)
       ;(checkBookingConflict as jest.Mock).mockResolvedValue(true)
 
       const request = new NextRequest('http://localhost:3000/api/bookings', {
@@ -278,6 +281,7 @@ describe('/api/bookings', () => {
         image: null
       })
       ;(validateMeetingDuration as jest.Mock).mockReturnValue(true)
+      ;(validateOperatingHours as jest.Mock).mockReturnValue(true)
       ;(checkBookingConflict as jest.Mock).mockResolvedValue(false)
       ;(createBooking as jest.Mock).mockResolvedValue({ id: 'booking123' })
 
@@ -310,6 +314,7 @@ describe('/api/bookings', () => {
         image: null
       })
       ;(validateMeetingDuration as jest.Mock).mockReturnValue(true)
+      ;(validateOperatingHours as jest.Mock).mockReturnValue(true)
       ;(checkBookingConflict as jest.Mock).mockResolvedValue(false)
       ;(createBooking as jest.Mock).mockRejectedValue(new Error('Database error'))
 
@@ -369,6 +374,7 @@ describe('/api/bookings', () => {
         image: null
       })
       ;(validateMeetingDuration as jest.Mock).mockReturnValue(true)
+      ;(validateOperatingHours as jest.Mock).mockReturnValue(true)
       ;(checkBookingConflict as jest.Mock).mockResolvedValue(false)
       ;(createBooking as jest.Mock).mockResolvedValue({ id: 'booking123' })
 

@@ -6,7 +6,7 @@
 
 import { checkBookingConflict, createBooking, getBookings, getRoomById } from '@/lib/airtable';
 import { getServerUser } from '@/lib/auth_server';
-import { checkRateLimit, createBookingSchema, validateAndSanitize, validateMeetingDuration } from '@/lib/validation';
+import { checkRateLimit, createBookingSchema, validateAndSanitize, validateMeetingDuration, validateOperatingHours } from '@/lib/validation';
 import { withErrorHandler, createError } from '@/lib/error-handler';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -82,6 +82,19 @@ async function handleCreateBooking(request: NextRequest) {
   if (!validateMeetingDuration(validatedData.startTime, validatedData.endTime, room)) {
     const maxHours = room.maxMeetingHours ?? 8; // Default fallback
     throw createError.validation(`Meeting duration exceeds the maximum allowed time of ${maxHours} hours for this room`);
+  }
+
+  // Validate operating hours
+  if (!validateOperatingHours(validatedData.startTime, validatedData.endTime, room)) {
+    const formatTime = (seconds: number) => {
+      const hours = Math.floor(seconds / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+    };
+    
+    const openTime = formatTime(room.startTime);
+    const closeTime = formatTime(room.endTime);
+    throw createError.validation(`Booking must be within the room's operating hours (${openTime} - ${closeTime})`);
   }
 
   const hasConflict = await checkBookingConflict(
