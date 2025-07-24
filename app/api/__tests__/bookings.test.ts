@@ -6,6 +6,7 @@ jest.mock('@/lib/airtable', () => ({
   checkBookingConflict: jest.fn(),
   createBooking: jest.fn(),
   getBookings: jest.fn(),
+  getRoomById: jest.fn(),
 }))
 
 jest.mock('@/lib/auth_server', () => ({
@@ -18,11 +19,12 @@ jest.mock('@/lib/validation', () => ({
     parse: jest.fn(),
   },
   validateAndSanitize: jest.fn(),
+  validateMeetingDuration: jest.fn(),
 }))
 
-import { checkBookingConflict, createBooking, getBookings } from '@/lib/airtable'
+import { checkBookingConflict, createBooking, getBookings, getRoomById } from '@/lib/airtable'
 import { getServerUser } from '@/lib/auth_server'
-import { checkRateLimit, validateAndSanitize } from '@/lib/validation'
+import { checkRateLimit, validateAndSanitize, validateMeetingDuration } from '@/lib/validation'
 
 describe('/api/bookings', () => {
   beforeEach(() => {
@@ -99,6 +101,15 @@ describe('/api/bookings', () => {
       ;(getServerUser as jest.Mock).mockResolvedValue(mockUser)
       ;(checkRateLimit as jest.Mock).mockReturnValue(true)
       ;(validateAndSanitize as jest.Mock).mockReturnValue(validBookingData)
+      ;(getRoomById as jest.Mock).mockResolvedValue({
+        id: 'recABCDEFGHIJKLMNOP',
+        name: 'Test Room',
+        capacity: 10,
+        startTime: 28800,
+        endTime: 64800,
+        image: null
+      })
+      ;(validateMeetingDuration as jest.Mock).mockReturnValue(true)
       ;(checkBookingConflict as jest.Mock).mockResolvedValue(false)
       
       const mockCreatedBooking = {
@@ -222,6 +233,15 @@ describe('/api/bookings', () => {
       ;(getServerUser as jest.Mock).mockResolvedValue(mockUser)
       ;(checkRateLimit as jest.Mock).mockReturnValue(true)
       ;(validateAndSanitize as jest.Mock).mockReturnValue(validBookingData)
+      ;(getRoomById as jest.Mock).mockResolvedValue({
+        id: 'recABCDEFGHIJKLMNOP',
+        name: 'Test Room',
+        capacity: 10,
+        startTime: 28800,
+        endTime: 64800,
+        image: null
+      })
+      ;(validateMeetingDuration as jest.Mock).mockReturnValue(true)
       ;(checkBookingConflict as jest.Mock).mockResolvedValue(true)
 
       const request = new NextRequest('http://localhost:3000/api/bookings', {
@@ -249,6 +269,15 @@ describe('/api/bookings', () => {
       ;(getServerUser as jest.Mock).mockResolvedValue(mockUser)
       ;(checkRateLimit as jest.Mock).mockReturnValue(true)
       ;(validateAndSanitize as jest.Mock).mockReturnValue(validBookingData)
+      ;(getRoomById as jest.Mock).mockResolvedValue({
+        id: 'recABCDEFGHIJKLMNOP',
+        name: 'Test Room',
+        capacity: 10,
+        startTime: 28800,
+        endTime: 64800,
+        image: null
+      })
+      ;(validateMeetingDuration as jest.Mock).mockReturnValue(true)
       ;(checkBookingConflict as jest.Mock).mockResolvedValue(false)
       ;(createBooking as jest.Mock).mockResolvedValue({ id: 'booking123' })
 
@@ -272,6 +301,15 @@ describe('/api/bookings', () => {
       ;(getServerUser as jest.Mock).mockResolvedValue(mockUser)
       ;(checkRateLimit as jest.Mock).mockReturnValue(true)
       ;(validateAndSanitize as jest.Mock).mockReturnValue(validBookingData)
+      ;(getRoomById as jest.Mock).mockResolvedValue({
+        id: 'recABCDEFGHIJKLMNOP',
+        name: 'Test Room',
+        capacity: 10,
+        startTime: 28800,
+        endTime: 64800,
+        image: null
+      })
+      ;(validateMeetingDuration as jest.Mock).mockReturnValue(true)
       ;(checkBookingConflict as jest.Mock).mockResolvedValue(false)
       ;(createBooking as jest.Mock).mockRejectedValue(new Error('Database error'))
 
@@ -322,6 +360,15 @@ describe('/api/bookings', () => {
       ;(getServerUser as jest.Mock).mockResolvedValue(mockUser)
       ;(checkRateLimit as jest.Mock).mockReturnValue(true)
       ;(validateAndSanitize as jest.Mock).mockReturnValue(validBookingData)
+      ;(getRoomById as jest.Mock).mockResolvedValue({
+        id: 'recABCDEFGHIJKLMNOP',
+        name: 'Test Room',
+        capacity: 10,
+        startTime: 28800,
+        endTime: 64800,
+        image: null
+      })
+      ;(validateMeetingDuration as jest.Mock).mockReturnValue(true)
       ;(checkBookingConflict as jest.Mock).mockResolvedValue(false)
       ;(createBooking as jest.Mock).mockResolvedValue({ id: 'booking123' })
 

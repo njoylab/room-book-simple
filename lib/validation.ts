@@ -6,6 +6,26 @@
 
 import { z } from 'zod';
 import { BOOKING_STATUS } from './types';
+import { getMaxMeetingHours } from './airtable';
+import { MeetingRoom } from './types';
+
+/**
+ * Validates that a booking duration doesn't exceed the maximum allowed hours
+ * @param startTime - ISO 8601 datetime string for booking start
+ * @param endTime - ISO 8601 datetime string for booking end
+ * @param room - The meeting room object
+ * @returns {boolean} True if duration is valid, false otherwise
+ * @description Checks if the booking duration exceeds the room-specific or global maximum meeting hours
+ */
+export function validateMeetingDuration(startTime: string, endTime: string, room: MeetingRoom): boolean {
+  const start = new Date(startTime);
+  const end = new Date(endTime);
+  const durationMs = end.getTime() - start.getTime();
+  const durationHours = durationMs / (1000 * 60 * 60);
+  const maxHours = getMaxMeetingHours(room);
+  
+  return durationHours <= maxHours;
+}
 
 /**
  * Validation schema for creating new room bookings

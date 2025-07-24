@@ -26,8 +26,18 @@ jest.mock('../airtable_client', () => ({
   updateRecord: jest.fn(),
 }));
 
-import { getMeetingRooms, getBookings } from '../airtable';
+import { getMeetingRooms, getBookings, getMaxMeetingHours } from '../airtable';
+import { MeetingRoom } from '../types';
 import { fetchAllRecords } from '../airtable_client';
+
+// Mock the env module
+jest.mock('../env', () => ({
+  env: {
+    AIRTABLE_MEETING_ROOMS_TABLE: 'MeetingRooms',
+    AIRTABLE_BOOKINGS_TABLE: 'Bookings',
+    MAX_MEETING_HOURS: 8
+  }
+}));
 
 const mockFetchAllRecords = fetchAllRecords as jest.MockedFunction<typeof fetchAllRecords>;
 
@@ -59,7 +69,7 @@ describe('airtable', () => {
       const rooms = await getMeetingRooms();
 
       expect(fetchAllRecords).toHaveBeenCalledWith('MeetingRooms', {
-        fields: ['name', 'capacity', 'notes', 'location', 'status', 'startTime', 'endTime', 'image'],
+        fields: ['name', 'capacity', 'notes', 'location', 'status', 'startTime', 'endTime', 'image', 'maxMeetingHours'],
         sort: [{ field: 'name', direction: 'asc' }]
       });
 
@@ -115,5 +125,48 @@ describe('airtable', () => {
         status: 'Confirmed',
       });
     });
+  });
+});
+
+describe('getMaxMeetingHours', () => {
+  it('should return room-specific maxMeetingHours when set', () => {
+    const room: MeetingRoom = {
+      id: 'room1',
+      name: 'Test Room',
+      capacity: 10,
+      startTime: 28800,
+      endTime: 64800,
+      image: null,
+      maxMeetingHours: 4
+    };
+    
+    expect(getMaxMeetingHours(room)).toBe(4);
+  });
+
+  it('should return global default when room-specific maxMeetingHours is not set', () => {
+    const room: MeetingRoom = {
+      id: 'room1',
+      name: 'Test Room',
+      capacity: 10,
+      startTime: 28800,
+      endTime: 64800,
+      image: null
+    };
+    
+    expect(getMaxMeetingHours(room)).toBe(8);
+  });
+
+  it('should return global default when room-specific maxMeetingHours is undefined', () => {
+    const room: MeetingRoom = {
+      id: 'room1',
+      name: 'Test Room',
+      capacity: 10,
+      startTime: 28800,
+      endTime: 64800,
+      image: null,
+      maxMeetingHours: undefined
+    };
+    
+    expect(getMaxMeetingHours(room)).toBe(8);
   });
 });

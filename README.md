@@ -139,6 +139,7 @@ SESSION_DURATION_HOURS=168                            # Default: 168 hours (7 da
 # Application Configuration
 APP_TITLE=B4I                                         # Default: "B4I"
 UPCOMING_MEETINGS_HOURS=24                            # Optional: hours to look ahead (0-168), defaults to current day
+MAX_MEETING_HOURS=8                                   # Default: 8 hours (1-24), maximum meeting duration
 APP_BASE_URL=http://localhost:3000                    # Optional: base URL for OAuth redirects
 NODE_ENV=development                                  # Default: "development"
 
@@ -159,6 +160,7 @@ NODE_ENV=development                                  # Default: "development"
 - `SESSION_DURATION_HOURS` - Session duration in hours (1-168, default: 168 = 7 days)
 - `APP_TITLE` - Application title (default: "B4I")
 - `UPCOMING_MEETINGS_HOURS` - Hours to look ahead for upcoming meetings (0-168). If not set, defaults to showing meetings until end of current day
+- `MAX_MEETING_HOURS` - Maximum meeting duration in hours (1-24, default: 8). Can be overridden per room in Airtable
 - `APP_BASE_URL` - Base URL for OAuth redirects (auto-detected if not set)
 - `NODE_ENV` - Environment mode (default: "development")
 

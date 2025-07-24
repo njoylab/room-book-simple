@@ -58,6 +58,10 @@ const envSchema = z.object({
   /** Token for calendar feed authentication */
   CALENDAR_FEED_TOKEN: z.string().min(1, 'CALENDAR_FEED_TOKEN is required'),
 
+  /** Meeting Duration Configuration */
+  /** Maximum number of hours a meeting can last (1-24 hours, defaults to 8 hours) */
+  MAX_MEETING_HOURS: z.string().default('8').transform(val => parseInt(val) || 8).refine(val => val >= 1 && val <= 24, 'MAX_MEETING_HOURS must be between 1 and 24 hours'),
+
 });
 
 /**

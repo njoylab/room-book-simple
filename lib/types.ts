@@ -27,6 +27,8 @@ export interface MeetingRoom {
   endTime: number;
   /** URL or path to the room's image */
   image: AirtableImage | null;
+  /** Maximum number of hours a meeting can last in this room (optional - overrides global setting) */
+  maxMeetingHours?: number;
 }
 
 /**
