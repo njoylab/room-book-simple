@@ -196,6 +196,20 @@ export function RoomCard({ room, bookings }: RoomCardProps) {
           )}
         </div>
 
+        {/* Room Tags */}
+        {room.tags && room.tags.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-4">
+            {room.tags.map((tag, index) => (
+              <span
+                key={index}
+                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
+
         {/* Current Booking */}
         {currentBooking && (
           <div className="bg-orange-50 border-l-4 border-orange-400 p-4 mb-4 rounded-r-lg">
