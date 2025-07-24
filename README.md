@@ -92,7 +92,6 @@ Before running this application, you'll need:
 - Example: Set `maxMeetingHours` to `2` for a small meeting room that should only allow 2-hour meetings
 - Example: Set `maxMeetingHours` to `1.5` for a room that should only allow 90-minute meetings
 
-**Note on Room Tags**: 
 - The `tags` field uses Airtable's "Multiple Select" type for easy room categorization
 - Tags are displayed as styled badges on room cards for quick visual identification
 - Suggested tags: "Conference", "Video Call", "Large", "Small", "Quiet", "Whiteboard", "Projector", "Training"
