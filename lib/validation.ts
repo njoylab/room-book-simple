@@ -39,15 +39,19 @@ export function validateOperatingHours(startTime: string, endTime: string, room:
   const start = new Date(startTime);
   const end = new Date(endTime);
   
-  // Get the date part for the booking start
-  const bookingStartDate = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  // Get the date part for the booking start in UTC
+  const bookingStartDate = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate()));
   
   // Calculate room opening and closing times for the booking start date
   const roomOpenTime = new Date(bookingStartDate);
-  roomOpenTime.setSeconds(room.startTime);
+  const openHours = Math.floor(room.startTime / 3600);
+  const openMinutes = Math.floor((room.startTime % 3600) / 60);
+  roomOpenTime.setUTCHours(openHours, openMinutes, 0, 0);
   
   const roomCloseTime = new Date(bookingStartDate);
-  roomCloseTime.setSeconds(room.endTime);
+  const closeHours = Math.floor(room.endTime / 3600);
+  const closeMinutes = Math.floor((room.endTime % 3600) / 60);
+  roomCloseTime.setUTCHours(closeHours, closeMinutes, 0, 0);
   
   // Handle rooms that operate 24 hours (startTime = 0, endTime = 86400)
   if (room.startTime === 0 && room.endTime === 86400) {
@@ -62,9 +66,9 @@ export function validateOperatingHours(startTime: string, endTime: string, room:
     const bookingStartsAfterOpen = start >= roomOpenTime;
     
     // For end time, check if it's before closing time of the end date
-    const bookingEndDate = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+    const bookingEndDate = new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), end.getUTCDate()));
     const roomCloseTimeEndDay = new Date(bookingEndDate);
-    roomCloseTimeEndDay.setSeconds(room.endTime);
+    roomCloseTimeEndDay.setUTCHours(closeHours, closeMinutes, 0, 0);
     
     const bookingEndsBeforeClose = end <= roomCloseTimeEndDay;
     

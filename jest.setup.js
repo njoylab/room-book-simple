@@ -1,5 +1,8 @@
 import '@testing-library/jest-dom'
 
+// Set timezone to UTC for consistent test results
+process.env.TZ = 'UTC'
+
 // Polyfill for Next.js Web API globals
 const { TextEncoder, TextDecoder } = require('util')
 global.TextEncoder = TextEncoder
