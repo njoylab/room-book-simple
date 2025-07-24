@@ -61,14 +61,32 @@ export default async function BookRoomPage({ params, searchParams }: PageProps) 
 
               {/* Room Title Overlay */}
               <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                <h1 className="text-3xl md:text-4xl font-bold mb-2 drop-shadow-2xl text-shadow-lg">
-                  {room.name}
-                </h1>
-                {room.location && (
-                  <div className="flex items-center text-white/95">
-                    <span className="text-lg font-medium drop-shadow-lg">{room.location}</span>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <h1 className="text-3xl md:text-4xl font-bold mb-2 drop-shadow-2xl text-shadow-lg">
+                      {room.name}
+                    </h1>
+                    {room.location && (
+                      <div className="flex items-center text-white/95">
+                        <span className="text-lg font-medium drop-shadow-lg">{room.location}</span>
+                      </div>
+                    )}
                   </div>
-                )}
+                  
+                  {/* Tags */}
+                  {room.tags && room.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 ml-4 mt-1">
+                      {room.tags.map((tag, index) => (
+                        <span
+                          key={index}
+                          className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-white/20 text-white border border-white/30 backdrop-blur-sm"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
