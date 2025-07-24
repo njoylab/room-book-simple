@@ -64,10 +64,10 @@ export function generateTimeSlots(
   // Generate 30-minute slots
   for (let time = startSeconds; time < endSeconds; time += 1800) { // 1800 = 30 minutes
     const slotStart = new Date(date);
-    slotStart.setHours(Math.floor(time / 3600), Math.floor((time % 3600) / 60), 0, 0);
+    slotStart.setUTCHours(Math.floor(time / 3600), Math.floor((time % 3600) / 60), 0, 0);
 
     const slotEnd = new Date(slotStart);
-    slotEnd.setMinutes(slotStart.getMinutes() + 30);
+    slotEnd.setUTCMinutes(slotStart.getUTCMinutes() + 30);
 
     // Check if this slot conflicts with any booking
     const conflictingBooking = bookings.find(booking => {
@@ -113,7 +113,8 @@ export function formatSlotTime(isoString: string): string {
   return date.toLocaleTimeString(undefined, {
     hour: '2-digit',
     minute: '2-digit',
-    hour12: false
+    hour12: false,
+    timeZone: 'UTC'
   });
 }
 
