@@ -28,9 +28,29 @@ jobs:
 
     - name: Run tests
       run: npm test
+      env:
+        NODE_ENV: test
+        AIRTABLE_API_KEY: valid_airtable_api_key_123456789
+        AIRTABLE_BASE_ID: test_base
+        SLACK_CLIENT_ID: mock_client_id_value
+        SLACK_CLIENT_SECRET: mock_client_secret_value
+        SLACK_SIGNING_SECRET: mock_signing_secret_value
+        SESSION_SECRET: mocksessionsecret32charsfortestX
+        APP_BASE_URL: http://localhost:3000
+        CALENDAR_FEED_TOKEN: mock_calendar_feed_token_value
 
     - name: Build application
       run: npm run build
+      env:
+        NODE_ENV: production
+        AIRTABLE_API_KEY: valid_airtable_api_key_123456789
+        AIRTABLE_BASE_ID: test_base
+        SLACK_CLIENT_ID: mock_client_id_value
+        SLACK_CLIENT_SECRET: mock_client_secret_value
+        SLACK_SIGNING_SECRET: mock_signing_secret_value
+        SESSION_SECRET: mocksessionsecret32charsfortestX
+        APP_BASE_URL: http://localhost:3000
+        CALENDAR_FEED_TOKEN: mock_calendar_feed_token_value
 
     - name: Upload coverage reports
       uses: codecov/codecov-action@v4
