@@ -56,8 +56,11 @@ export async function getMeetingRooms(): Promise<MeetingRoom[]> {
   const records = await fetchAllRecords(MEETING_ROOMS_TABLE, {
     fields: publicFieldsRooms,
     sort: [{ field: 'name', direction: 'asc' }],
-    cacheOptions: {
-      tags: [CACHE_TAGS.MEETING_ROOMS],
+    cache: {
+      cacheOptions: {
+        tags: [CACHE_TAGS.MEETING_ROOMS],
+      },
+      cache: 'force-cache'
     }
   });
 
@@ -77,8 +80,11 @@ export async function getMeetingRooms(): Promise<MeetingRoom[]> {
  */
 export async function getBookings(): Promise<Booking[]> {
   const records = await fetchAllRecords(BOOKINGS_TABLE, {
-    cacheOptions: {
-      tags: [CACHE_TAGS.BOOKINGS_ALL],
+    cache: {
+      cacheOptions: {
+        tags: [CACHE_TAGS.BOOKINGS_ALL],
+      },
+      cache: 'force-cache'
     }
   });
   return records.map(parseBooking);
@@ -107,8 +113,11 @@ export async function getRoomBookings(roomId: string): Promise<Booking[]> {
       {room} = '${sanitizeForFormula(validRoomId)}',
       NOT({status} = '${BOOKING_STATUS.CANCELLED}')
     )`,
-    cacheOptions: {
-      tags: [CACHE_TAGS.BOOKINGS_BY_ROOM.replace('{roomId}', validRoomId)],
+    cache: {
+      cacheOptions: {
+        tags: [CACHE_TAGS.BOOKINGS_BY_ROOM.replace('{roomId}', validRoomId)],
+      },
+      cache: 'force-cache'
     }
   });
 
@@ -143,8 +152,11 @@ export async function getUserFutureBookings(userId: string): Promise<Booking[]> 
       NOT({status} = '${BOOKING_STATUS.CANCELLED}')
     )`,
     sort: [{ field: 'startTime', direction: 'asc' }],
-    cacheOptions: {
-      tags: [CACHE_TAGS.BOOKING_BY_USER.replace('{userId}', validUserId)],
+    cache: {
+      cacheOptions: {
+        tags: [CACHE_TAGS.BOOKING_BY_USER.replace('{userId}', validUserId)],
+      },
+      cache: 'force-cache'
     }
   });
 
@@ -180,8 +192,11 @@ export async function getBookingsForDate(roomId: string, selectedDate: Date): Pr
       {startTime} <= '${endOfDay.toISOString()}',
       NOT({status} = '${BOOKING_STATUS.CANCELLED}')
     )`,
-    cacheOptions: {
-      tags: [CACHE_TAGS.BOOKINGS_FOR_DATE.replace('{roomId}', validRoomId).replace('{date}', startOfDay.toISOString())]
+    cache: {
+      cacheOptions: {
+        tags: [CACHE_TAGS.BOOKINGS_FOR_DATE.replace('{roomId}', validRoomId).replace('{date}', startOfDay.toISOString())],
+      },
+      cache: 'force-cache'
     }
   });
 
@@ -377,8 +392,11 @@ export async function getUpcomingBookings(): Promise<Booking[]> {
       )
     `,
     sort: [{ field: 'startTime', direction: 'asc' }],
-    cacheOptions: {
-      tags: [CACHE_TAGS.BOOKINGS_UPCOMING],
+    cache: {
+      cacheOptions: {
+        tags: [CACHE_TAGS.BOOKINGS_UPCOMING],
+      },
+      cache: 'force-cache'
     }
   });
 
