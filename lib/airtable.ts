@@ -59,7 +59,7 @@ export async function getMeetingRooms(): Promise<MeetingRoom[]> {
     cache: {
       cacheOptions: {
         tags: [CACHE_TAGS.MEETING_ROOMS],
-        revalidate: 1 * 60 * 60 // 1 hour
+        revalidate: env.ROOM_CACHE_TIME
       },
       cache: 'force-cache'
     }
@@ -232,7 +232,7 @@ export async function getRoomById(id: string): Promise<MeetingRoom | null> {
       {
         cacheOptions: {
           tags: [CACHE_TAGS.MEETING_ROOM_BY_ID.replace('{id}', validId)],
-          revalidate: 1 * 60 * 60 // 1 hour
+          revalidate: env.ROOM_CACHE_TIME
         },
         cache: 'force-cache'
       }
