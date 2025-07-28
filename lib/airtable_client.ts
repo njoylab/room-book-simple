@@ -84,12 +84,12 @@ export async function fetchAllRecords(
 /**
  * Fetch a single record by ID
  */
-export async function fetchRecord(table: string, recordId: string): Promise<AirtableRecord> {
+export async function fetchRecord(table: string, recordId: string, options: { cacheOptions?: RequestInit['next'] } = {}): Promise<AirtableRecord> {
     const url = `${AIRTABLE_BASE_URL}/${table}/${recordId}`;
 
     const response = await fetch(url, {
         headers,
-        next: { revalidate: 300 } // 5 minutes cache for individual records
+        next: options.cacheOptions
     });
 
     if (!response.ok) {

@@ -29,6 +29,7 @@ jest.mock('../airtable_client', () => ({
 import { getMeetingRooms, getBookings, getMaxMeetingHours } from '../airtable';
 import { MeetingRoom } from '../types';
 import { fetchAllRecords } from '../airtable_client';
+import { CACHE_TAGS } from '@/app/constants/cache';
 
 // Mock the env module
 jest.mock('../env', () => ({
@@ -70,7 +71,10 @@ describe('airtable', () => {
 
       expect(fetchAllRecords).toHaveBeenCalledWith('MeetingRooms', {
         fields: ['name', 'capacity', 'notes', 'location', 'status', 'startTime', 'endTime', 'image', 'maxMeetingHours', 'tags'],
-        sort: [{ field: 'name', direction: 'asc' }]
+        sort: [{ field: 'name', direction: 'asc' }],
+        cacheOptions: {
+          tags: [CACHE_TAGS.MEETING_ROOMS]
+        }
       });
 
       expect(rooms).toHaveLength(1);
@@ -109,7 +113,11 @@ describe('airtable', () => {
 
       const bookings = await getBookings();
 
-      expect(fetchAllRecords).toHaveBeenCalledWith('Bookings');
+      expect(fetchAllRecords).toHaveBeenCalledWith('Bookings', {
+        cacheOptions: {
+          tags: [CACHE_TAGS.BOOKINGS_ALL]
+        }
+      });
 
       expect(bookings).toHaveLength(1);
       expect(bookings[0]).toEqual({

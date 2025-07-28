@@ -238,7 +238,7 @@ describe('airtable_client', () => {
             'Authorization': 'Bearer test-api-key',
             'Content-Type': 'application/json',
           },
-          next: { revalidate: 300 }
+          next: undefined
         }
       );
 

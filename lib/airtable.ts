@@ -4,6 +4,8 @@
  * meeting rooms and bookings, including CRUD operations, data parsing, and validation.
  */
 
+import { CACHE_TAGS } from '@/app/constants/cache';
+import { revalidateTag } from 'next/cache';
 import { createRecord, fetchAllRecords, fetchRecord, updateRecord } from './airtable_client';
 import { env } from './env';
 import { BOOKING_STATUS, Booking, MeetingRoom } from './types';
@@ -53,7 +55,10 @@ export async function getMeetingRooms(): Promise<MeetingRoom[]> {
 
   const records = await fetchAllRecords(MEETING_ROOMS_TABLE, {
     fields: publicFieldsRooms,
-    sort: [{ field: 'name', direction: 'asc' }]
+    sort: [{ field: 'name', direction: 'asc' }],
+    cacheOptions: {
+      tags: [CACHE_TAGS.MEETING_ROOMS],
+    }
   });
 
   return parseRoom(records);
@@ -63,7 +68,7 @@ export async function getMeetingRooms(): Promise<MeetingRoom[]> {
  * Retrieves all bookings from Airtable
  * @returns {Promise<Booking[]>} Array of all bookings
  * @description Fetches all booking records from the Airtable database.
- * Primarily used for administrative purposes or bulk data operations.
+ * Primarily used for Calendar export. So cache is 24 hours.
  * @example
  * ```typescript
  * const allBookings = await getBookings();
@@ -71,7 +76,11 @@ export async function getMeetingRooms(): Promise<MeetingRoom[]> {
  * ```
  */
 export async function getBookings(): Promise<Booking[]> {
-  const records = await fetchAllRecords(BOOKINGS_TABLE);
+  const records = await fetchAllRecords(BOOKINGS_TABLE, {
+    cacheOptions: {
+      tags: [CACHE_TAGS.BOOKINGS_ALL],
+    }
+  });
   return records.map(parseBooking);
 }
 
@@ -97,7 +106,10 @@ export async function getRoomBookings(roomId: string): Promise<Booking[]> {
       {startTime} >= '${startOfDay.toISOString()}',
       {room} = '${sanitizeForFormula(validRoomId)}',
       NOT({status} = '${BOOKING_STATUS.CANCELLED}')
-    )`
+    )`,
+    cacheOptions: {
+      tags: [CACHE_TAGS.BOOKINGS_BY_ROOM.replace('{roomId}', validRoomId)],
+    }
   });
 
   return records.map(parseBooking);
@@ -130,7 +142,10 @@ export async function getUserFutureBookings(userId: string): Promise<Booking[]> 
       {user} = '${sanitizeForFormula(validUserId)}',
       NOT({status} = '${BOOKING_STATUS.CANCELLED}')
     )`,
-    sort: [{ field: 'startTime', direction: 'asc' }]
+    sort: [{ field: 'startTime', direction: 'asc' }],
+    cacheOptions: {
+      tags: [CACHE_TAGS.BOOKING_BY_USER.replace('{userId}', validUserId)],
+    }
   });
 
   return records.map(parseBooking);
@@ -164,7 +179,10 @@ export async function getBookingsForDate(roomId: string, selectedDate: Date): Pr
       {startTime} >= '${startOfDay.toISOString()}',
       {startTime} <= '${endOfDay.toISOString()}',
       NOT({status} = '${BOOKING_STATUS.CANCELLED}')
-    )`
+    )`,
+    cacheOptions: {
+      tags: [CACHE_TAGS.BOOKINGS_FOR_DATE.replace('{roomId}', validRoomId).replace('{date}', startOfDay.toISOString())]
+    }
   });
 
   return records.map(parseBooking);
@@ -194,7 +212,13 @@ export async function getRoomById(id: string): Promise<MeetingRoom | null> {
 
   try {
     const validId = validateRoomId(id);
-    const record = await fetchRecord(MEETING_ROOMS_TABLE, validId);
+    const record = await fetchRecord(MEETING_ROOMS_TABLE, validId,
+      {
+        cacheOptions: {
+          tags: [CACHE_TAGS.MEETING_ROOM_BY_ID.replace('{id}', validId)],
+        }
+      }
+    );
     return parseRoom([record])[0];
   } catch (error) {
     console.error('Error fetching room by ID:', error);
@@ -213,7 +237,11 @@ export async function getRoomById(id: string): Promise<MeetingRoom | null> {
 export async function getBookingById(id: string): Promise<Booking | null> {
   try {
     const validId = validateBookingId(id);
-    const record = await fetchRecord(BOOKINGS_TABLE, validId);
+    const record = await fetchRecord(BOOKINGS_TABLE, validId, {
+      cacheOptions: {
+        tags: [CACHE_TAGS.BOOKING_BY_ID.replace('{id}', validId)]
+      }
+    });
     return parseBooking(record);
   } catch (error) {
     console.error('Error fetching booking by ID:', error);
@@ -266,6 +294,11 @@ export async function createBooking(bookingData: {
     note: sanitizedNote,
     room: [validRoomId],
   });
+
+  revalidateTag(CACHE_TAGS.BOOKINGS_UPCOMING);
+  revalidateTag(CACHE_TAGS.BOOKING_BY_USER.replace('{userId}', validUserId));
+  revalidateTag(CACHE_TAGS.BOOKINGS_BY_ROOM.replace('{roomId}', validRoomId));
+  revalidateTag(CACHE_TAGS.BOOKINGS_FOR_DATE.replace('{roomId}', validRoomId).replace('{date}', bookingData.startTime));
 
   return parseBooking(record);
 }
@@ -343,7 +376,10 @@ export async function getUpcomingBookings(): Promise<Booking[]> {
         {startTime} <= '${futureTime.toISOString()}'
       )
     `,
-    sort: [{ field: 'startTime', direction: 'asc' }]
+    sort: [{ field: 'startTime', direction: 'asc' }],
+    cacheOptions: {
+      tags: [CACHE_TAGS.BOOKINGS_UPCOMING],
+    }
   });
 
   return records.map(parseBooking);
@@ -374,6 +410,12 @@ export async function updateBooking(
   }
 
   const record = await updateRecord(BOOKINGS_TABLE, validBookingId, { status: validStatus });
+  revalidateTag(CACHE_TAGS.BOOKINGS_UPCOMING);
+  revalidateTag(CACHE_TAGS.BOOKING_BY_USER.replace('{userId}', validUserId));
+  revalidateTag(CACHE_TAGS.BOOKINGS_BY_ROOM.replace('{roomId}', record.fields.room as string));
+  revalidateTag(CACHE_TAGS.BOOKINGS_FOR_DATE.replace('{roomId}', record.fields.room as string).replace('{date}', record.fields.startTime as string));
+  revalidateTag(CACHE_TAGS.BOOKING_BY_ID.replace('{id}', validBookingId));
+
   return parseBooking(record);
 }
 
