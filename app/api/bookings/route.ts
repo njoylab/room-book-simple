@@ -2,6 +2,17 @@
  * @fileoverview API route for booking operations
  * @description Provides RESTful endpoints for retrieving and creating room bookings
  * with authentication, validation, rate limiting, and conflict checking.
+ * 
+ * Endpoints:
+ * - GET /api/bookings - Retrieve all bookings (admin use)
+ * - POST /api/bookings - Create new booking (authenticated users)
+ * 
+ * Security Features:
+ * - Session-based authentication required for POST
+ * - Rate limiting: 10 requests per minute per user
+ * - Input validation with Zod schemas
+ * - SQL injection prevention via parameterized queries
+ * - XSS protection via input sanitization
  */
 
 import { checkBookingConflict, createBooking, getBookings, getRoomById } from '@/lib/airtable';
@@ -16,10 +27,35 @@ import { NextRequest, NextResponse } from 'next/server';
  * @throws {AppError} When database operation fails
  * @description Fetches all booking records from the Airtable database and returns
  * them as a JSON response. Used for administrative purposes and data analysis.
+ * 
+ * Response Format:
+ * ```json
+ * [
+ *   {
+ *     "id": "rec1234567890123",
+ *     "userLabel": "John Doe",
+ *     "user": "U1234567890",
+ *     "startTime": "2024-03-15T14:00:00.000Z",
+ *     "endTime": "2024-03-15T15:00:00.000Z",
+ *     "note": "Team meeting",
+ *     "room": "rec9876543210987",
+ *     "roomName": "Conference Room A",
+ *     "roomLocation": "Floor 2",
+ *     "status": "Confirmed"
+ *   }
+ * ]
+ * ```
+ * 
+ * Error Responses:
+ * - 500: Database connection error
+ * - 503: Service unavailable
+ * 
  * @example
  * ```typescript
  * // GET /api/bookings
- * // Response: Booking[]
+ * const response = await fetch('/api/bookings');
+ * const bookings = await response.json();
+ * console.log(`Found ${bookings.length} bookings`);
  * ```
  */
 async function handleGetBookings() {
@@ -41,17 +77,71 @@ async function handleGetBookings() {
  * - Requires user authentication via session cookies
  * - Rate limiting: max 10 bookings per user per minute
  * - Input validation using Zod schemas
+ * - Conflict checking to prevent double bookings
  * 
  * Business Logic:
- * - Conflict checking to prevent double bookings
  * - Date/time validation to prevent past bookings
  * - Room availability verification
+ * - Operating hours validation
+ * - Meeting duration limits (room-specific or global)
+ * 
+ * Request Body Schema:
+ * ```typescript
+ * {
+ *   roomId: string;        // Airtable record ID (e.g., "rec1234567890123")
+ *   startTime: string;     // ISO 8601 datetime (e.g., "2024-03-15T14:00:00.000Z")
+ *   endTime: string;       // ISO 8601 datetime (e.g., "2024-03-15T15:00:00.000Z")
+ *   note?: string;         // Optional booking description (max 500 chars)
+ * }
+ * ```
+ * 
+ * Success Response (201):
+ * ```json
+ * {
+ *   "id": "rec1234567890123",
+ *   "userLabel": "John Doe",
+ *   "user": "U1234567890",
+ *   "startTime": "2024-03-15T14:00:00.000Z",
+ *   "endTime": "2024-03-15T15:00:00.000Z",
+ *   "note": "Team meeting",
+ *   "room": "rec9876543210987",
+ *   "roomName": "Conference Room A",
+ *   "roomLocation": "Floor 2",
+ *   "status": "Confirmed"
+ * }
+ * ```
+ * 
+ * Error Responses:
+ * - 401: Authentication required
+ * - 400: Validation error (invalid input)
+ * - 404: Room not found
+ * - 409: Booking conflict (time slot already booked)
+ * - 429: Rate limit exceeded
+ * - 500: Server error
  * 
  * @example
  * ```typescript
  * // POST /api/bookings
- * // Body: { roomId: string, startTime: string, endTime: string, note?: string }
- * // Response: Booking (201) or error response
+ * const bookingData = {
+ *   roomId: "rec9876543210987",
+ *   startTime: "2024-03-15T14:00:00.000Z",
+ *   endTime: "2024-03-15T15:00:00.000Z",
+ *   note: "Weekly team sync"
+ * };
+ * 
+ * const response = await fetch('/api/bookings', {
+ *   method: 'POST',
+ *   headers: { 'Content-Type': 'application/json' },
+ *   body: JSON.stringify(bookingData)
+ * });
+ * 
+ * if (response.ok) {
+ *   const booking = await response.json();
+ *   console.log('Booking created:', booking.id);
+ * } else {
+ *   const error = await response.json();
+ *   console.error('Booking failed:', error.message);
+ * }
  * ```
  */
 async function handleCreateBooking(request: NextRequest) {
@@ -104,31 +194,19 @@ async function handleCreateBooking(request: NextRequest) {
   );
 
   if (hasConflict) {
-    throw createError.conflict('Room is already booked for this time slot');
+    throw createError.conflict('This time slot is already booked');
   }
 
-  try {
-    const booking = await createBooking({
-      roomId: validatedData.roomId,
-      userId: user.id,
-      userLabel: user.name,
-      startTime: validatedData.startTime,
-      endTime: validatedData.endTime,
-      note: validatedData.note,
-    });
+  const booking = await createBooking({
+    roomId: validatedData.roomId,
+    userId: user.id,
+    userLabel: user.name,
+    startTime: validatedData.startTime,
+    endTime: validatedData.endTime,
+    note: validatedData.note
+  });
 
-    return NextResponse.json(booking, { status: 201 });
-  } catch (error) {
-    if (error instanceof Error) {
-      if (error.message === 'Room is unavailable for booking') {
-        throw createError.validation('Room is unavailable for booking');
-      }
-      if (error.message === 'Room not found') {
-        throw createError.notFound('Room not found');
-      }
-    }
-    throw error;
-  }
+  return NextResponse.json(booking, { status: 201 });
 }
 
 /**
