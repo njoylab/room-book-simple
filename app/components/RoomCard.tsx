@@ -2,6 +2,13 @@
  * @fileoverview Room card component for displaying meeting room information and status
  * @description Provides a visual card representation of a meeting room with real-time
  * availability status, current/next booking information, and room details.
+ * 
+ * Features:
+ * - Real-time availability status calculation
+ * - Current and next booking display
+ * - Responsive design with hover effects
+ * - Image handling with fallbacks
+ * - Status-based styling and indicators
  */
 
 import { Booking, MeetingRoom } from '@/lib/types';
@@ -24,6 +31,7 @@ interface RoomCardProps {
 /**
  * Default fallback image for rooms without a specific image
  * @constant {string}
+ * @description Used when a room doesn't have a custom image uploaded to Airtable
  */
 const defaultRoomImage = '/images/default-room.webp';
 
@@ -40,6 +48,12 @@ const defaultRoomImage = '/images/default-room.webp';
  * - Next booking information (if available and not currently occupied)
  * - Room notes/description
  * - Interactive hover effects and navigation to booking page
+ * 
+ * Status Logic:
+ * - Available: No current booking and room not marked unavailable
+ * - Occupied: Currently has an active booking
+ * - Unavailable: Room marked as unavailable in system
+ * 
  * @example
  * ```tsx
  * <RoomCard 
@@ -56,6 +70,11 @@ export function RoomCard({ room, bookings }: RoomCardProps) {
   /**
    * Find current active booking (if any)
    * @description Searches for a booking where current time falls between start and end time
+   * @returns {Booking | undefined} Current booking if exists, undefined otherwise
+   * @example
+   * ```typescript
+   * const current = currentBooking; // Booking if room is occupied, undefined if available
+   * ```
    */
   const currentBooking = safeBookings.find(booking => {
     const startTime = new Date(booking.startTime);
@@ -66,6 +85,11 @@ export function RoomCard({ room, bookings }: RoomCardProps) {
   /**
    * Find the next upcoming booking
    * @description Finds the earliest booking that starts after the current time
+   * @returns {Booking | undefined} Next booking if exists, undefined otherwise
+   * @example
+   * ```typescript
+   * const next = nextBooking; // Next booking info for display
+   * ```
    */
   const nextBooking = safeBookings
     .filter(booking => new Date(booking.startTime) > now)
@@ -79,6 +103,7 @@ export function RoomCard({ room, bookings }: RoomCardProps) {
   /**
    * Configuration object for different room status states
    * @description Defines styling and text for each possible room status
+   * @type {Object.<string, StatusConfig>}
    */
   const statusConfig = {
     /** Room is available for booking */
@@ -107,26 +132,58 @@ export function RoomCard({ room, bookings }: RoomCardProps) {
     }
   };
 
-  /** Determine current room status based on availability and booking state */
-  const status = isUnavailable ? 'unavailable' : isAvailable ? 'available' : 'occupied';
-  /** Get styling configuration for current status */
-  const config = statusConfig[status];
+  /**
+   * Determine current room status and get appropriate configuration
+   * @description Returns the status configuration based on current room state
+   * @returns {StatusConfig} Configuration object for current status
+   */
+  const getCurrentStatus = () => {
+    if (isUnavailable) return statusConfig.unavailable;
+    if (currentBooking) return statusConfig.occupied;
+    return statusConfig.available;
+  };
 
-  /** Use room image or fallback to default image */
-  const roomImage = room.image?.thumbnails.large.url || defaultRoomImage;
+  const currentStatus = getCurrentStatus();
+
+  /**
+   * Get the appropriate room image URL
+   * @description Returns the room's custom image or fallback to default
+   * @returns {string} Image URL for display
+   */
+  const getRoomImage = () => {
+    if (room.image && room.image.url) {
+      return room.image.url;
+    }
+    return defaultRoomImage;
+  };
+
+  /**
+   * Format operating hours for display
+   * @description Converts room operating hours from seconds to readable format
+   * @returns {string} Formatted operating hours string
+   * @example
+   * ```typescript
+   * const hours = formatOperatingHours(); // "08:00 - 18:00"
+   * ```
+   */
+  const formatOperatingHours = () => {
+    const start = formatTime(room.startTime);
+    const end = formatTime(room.endTime);
+    return `${start} - ${end}`;
+  };
 
   const CardContent = (
     <div className={`
       bg-white rounded-xl shadow-sm border-2 border-gray-100 
       transition-all duration-200 ease-in-out
-      hover:shadow-lg hover:border-gray-200 ${config.cardBg}
+      hover:shadow-lg hover:border-gray-200 ${currentStatus.cardBg}
       ${isUnavailable ? 'opacity-75' : 'transform hover:-translate-y-1'}
       overflow-hidden
     `}>
       {/* Room Image - Desktop only */}
       <div className="hidden md:block relative h-48 bg-gradient-to-br from-primary to-purple-600 overflow-hidden">
         <Image
-          src={roomImage}
+          src={getRoomImage()}
           alt={room.name}
           fill
           className="object-cover transition-transform duration-300 group-hover:scale-105"
@@ -137,11 +194,11 @@ export function RoomCard({ room, bookings }: RoomCardProps) {
         {/* Status Badge - Overlay on image */}
         <div className="absolute top-4 right-4">
           <div className={`
-              ${config.bgColor} ${config.textColor} 
+              ${currentStatus.bgColor} ${currentStatus.textColor} 
               px-3 py-1.5 rounded-full text-sm font-medium
               shadow-lg backdrop-blur-sm
             `}>
-            {config.text}
+            {currentStatus.text}
           </div>
         </div>
       </div>
@@ -168,10 +225,10 @@ export function RoomCard({ room, bookings }: RoomCardProps) {
           {/* Status Badge - Mobile only */}
           <div className="md:hidden">
             <div className={`
-                ${config.bgColor} ${config.textColor} 
+                ${currentStatus.bgColor} ${currentStatus.textColor} 
                 px-3 py-1.5 rounded-full text-sm font-medium
               `}>
-              {config.text}
+              {currentStatus.text}
             </div>
           </div>
         </div>
@@ -191,7 +248,7 @@ export function RoomCard({ room, bookings }: RoomCardProps) {
               <svg className="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <span>{formatTime(room.startTime)} - {formatTime(room.endTime)}</span>
+              <span>{formatOperatingHours()}</span>
             </div>
           )}
         </div>
