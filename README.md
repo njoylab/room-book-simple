@@ -84,6 +84,30 @@ Before running this application, you'll need:
    - Select your base to get the Base ID
    - Create a personal access token at [airtable.com/create/tokens](https://airtable.com/create/tokens)
 
+#### API Token Permissions
+
+When creating your Airtable API token, you need different permissions depending on what features you want to use:
+
+**Basic Application (Required):**
+- `data.records:read` - Read room and booking data
+- `data.records:write` - Create and update bookings
+
+**Webhook Management (Optional - only needed for automatic cache invalidation):**
+- `schema.bases:read` - Read table structure (required for webhook script to find table IDs)
+- `webhook:manage` - Create, list, and delete webhooks
+
+**Token Setup Steps:**
+1. Go to [airtable.com/create/tokens](https://airtable.com/create/tokens)
+2. Click "Create new token"
+3. Give it a descriptive name (e.g., "Meeting Room App")
+4. Add your base under "Access" → "Add a base"
+5. Select the required scopes:
+   - **For basic functionality**: `data.records:read`, `data.records:write`
+   - **For webhook features**: Also add `schema.bases:read`, `webhook:manage`
+6. Click "Create token" and copy the generated token
+
+**Note**: If you don't need automatic cache invalidation via webhooks, you can create a token with only the basic permissions. The webhook management features are entirely optional.
+
 **Note on Meeting Duration Limits**: 
 - The `maxMeetingHours` field in the Meeting Rooms table is optional
 - If not set, the room will use the global `MAX_MEETING_HOURS` environment variable
@@ -163,6 +187,14 @@ NODE_ENV=development                                  # Default: "development"
 # Cache Configuration
 ROOM_CACHE_TIME=3600                                  # Optional: room data cache time in seconds (300-2592000), defaults to 3600 (1 hour)
 
+# Webhook Configuration (optional - for automatic cache invalidation)
+AIRTABLE_WEBHOOK_SECRET=your_webhook_secret_here      # Secret for webhook verification (optional for development)
+AIRTABLE_MEETING_ROOMS_TABLE_ID=tblxxxxxxxxx         # Table ID for meeting rooms (for webhook processing)
+AIRTABLE_BOOKINGS_TABLE_ID=tblxxxxxxxxx              # Table ID for bookings (for webhook processing)
+
+# Calendar Integration (optional)
+CALENDAR_FEED_TOKEN=your_calendar_token_here          # For calendar feed authentication (optional)
+
 ```
 
 ### Required Variables:
@@ -182,6 +214,10 @@ ROOM_CACHE_TIME=3600                                  # Optional: room data cach
 - `UPCOMING_MEETINGS_HOURS` - Hours to look ahead for upcoming meetings (0-168). If not set, defaults to showing meetings until end of current day
 - `MAX_MEETING_HOURS` - Maximum meeting duration in hours (1-24, default: 8). Can be overridden per room using the `maxMeetingHours` field in Airtable
 - `ROOM_CACHE_TIME` - Cache time for room data in seconds (300-2592000, default: 3600 = 1 hour). Controls how long room information is cached to improve performance
+- `AIRTABLE_WEBHOOK_SECRET` - Secret for webhook verification (optional for development)
+- `AIRTABLE_MEETING_ROOMS_TABLE_ID` - Table ID for meeting rooms webhook processing
+- `AIRTABLE_BOOKINGS_TABLE_ID` - Table ID for bookings webhook processing
+- `CALENDAR_FEED_TOKEN` - Token for calendar feed authentication (optional)
 - `APP_BASE_URL` - Base URL for OAuth redirects (auto-detected if not set)
 - `NODE_ENV` - Environment mode (default: "development")
 
@@ -301,6 +337,94 @@ For complete API documentation, see [docs/api-reference.md](./docs/api-reference
 - **ESLint**: Code linting with Next.js configuration
 - **Turbopack**: Fast development builds
 - **Hot Reload**: Automatic page updates during development
+
+### Webhook Management
+
+The application supports Airtable webhooks for automatic cache invalidation when rooms or bookings are modified.
+
+#### Automatic Setup (Recommended)
+
+Use the included script to automatically create webhooks via Airtable API:
+
+```bash
+# Setup webhooks automatically
+npm run webhooks:setup
+
+# List existing webhooks
+npm run webhooks:list
+
+# Delete all webhooks
+npm run webhooks:delete
+
+# Replace existing webhooks
+npx tsx scripts/setup-webhooks.ts create --replace
+```
+
+**Requirements:**
+- Your Airtable API token must have `schema.bases:read` and `webhook:manage` permissions (see API Token Permissions section above)
+- Only need `AIRTABLE_API_KEY` and `AIRTABLE_BASE_ID` in your `.env.local`
+- These permissions are **only needed for webhook management** - the app works fine without webhooks using just `data.records:read` and `data.records:write`
+
+**The script will:**
+- Find your rooms and bookings tables automatically
+- Create webhooks for both tables
+- Generate the required environment variables
+- Display setup instructions
+
+#### Manual Webhook Setup
+
+If the automatic setup doesn't work (e.g., due to API token permissions):
+
+1. **Get Table IDs**: Find your table IDs from Airtable URLs (`tblxxxxxxxxx`)
+2. **Create webhooks in Airtable**:
+   - Go to your Airtable base → "Automations" tab
+   - Create automation with "When record matches conditions" trigger
+   - Set conditions to trigger on record creation, update, or deletion
+   - Add webhook action with URL: `https://your-domain.com/api/webhooks/airtable`
+3. **Add environment variables**:
+   ```bash
+   AIRTABLE_WEBHOOK_SECRET=your_webhook_secret
+   AIRTABLE_MEETING_ROOMS_TABLE_ID=tblxxxxxxxxx
+   AIRTABLE_BOOKINGS_TABLE_ID=tblxxxxxxxxx
+   ```
+
+#### Cache Invalidation Logic
+
+**When Room Records Change:**
+- Invalidates `meeting-rooms` cache tag
+- Invalidates specific room cache: `meeting-room-by-{id}`
+
+**When Booking Records Change:**
+- Invalidates `bookings-all` and `bookings-upcoming` cache tags  
+- Invalidates specific booking cache: `booking-by-{id}`
+
+**Security Features:**
+- HMAC-SHA256 signature verification
+- Base ID validation to prevent cross-base webhooks
+- Optional webhook secret (can be disabled in development)
+
+#### Webhook Troubleshooting
+
+**Error: "Invalid permissions, or the requested model was not found" (403)**
+- Your API token lacks the required permissions
+- Go to [airtable.com/create/tokens](https://airtable.com/create/tokens) and edit your token
+- Ensure it has `schema.bases:read` and `webhook:manage` scopes
+- Make sure your base is added to the token's access list
+
+**Error: "Base ID is incorrect"**
+- Check your `AIRTABLE_BASE_ID` in `.env.local`
+- Base IDs start with `app` (e.g., `appXXXXXXXXXXXXXX`)
+- You can find it in your Airtable URL or API documentation
+
+**Webhook script finds no tables**
+- Your token may lack `schema.bases:read` permission
+- The base ID might be wrong
+- Table names in `.env.local` might not match Airtable exactly
+
+**Can't use webhooks on free plan?**
+- Webhooks work with Airtable API on all plans
+- The UI-based webhook automations may require paid plans
+- Our script uses the API directly, which should work on free plans
 
 ## Deployment
 

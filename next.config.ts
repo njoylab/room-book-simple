@@ -15,6 +15,12 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: '*.gravatar.com',
+        port: '',
+        pathname: '/**',
+      }
     ],
   },
   // Security headers

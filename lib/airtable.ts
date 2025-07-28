@@ -5,8 +5,8 @@
  */
 
 import { CACHE_TAGS } from '@/app/constants/cache';
-import { revalidateTag } from 'next/cache';
 import { createRecord, fetchAllRecords, fetchRecord, updateRecord } from './airtable_client';
+import { revalidateCacheForBooking } from './cache';
 import { env } from './env';
 import { BOOKING_STATUS, Booking, MeetingRoom } from './types';
 
@@ -155,7 +155,10 @@ export async function getUserFutureBookings(userId: string): Promise<Booking[]> 
     sort: [{ field: 'startTime', direction: 'asc' }],
     cache: {
       cacheOptions: {
-        tags: [CACHE_TAGS.BOOKING_BY_USER.replace('{userId}', validUserId)],
+        tags: [
+          CACHE_TAGS.BOOKING_BY_USER.replace('{userId}', validUserId),
+        ],
+        revalidate: 24 * 60 * 60 * 1000 // 24 hours, we need to invalidate timebased in case of room deletion
       },
       cache: 'force-cache'
     }
@@ -196,6 +199,7 @@ export async function getBookingsForDate(roomId: string, selectedDate: Date): Pr
     cache: {
       cacheOptions: {
         tags: [CACHE_TAGS.BOOKINGS_FOR_DATE.replace('{roomId}', validRoomId).replace('{date}', startOfDay.toISOString())],
+        revalidate: 24 * 60 * 60 * 1000 // 24 hours, we need to invalidate timebased in case of room deletion
       },
       cache: 'force-cache'
     }
@@ -247,19 +251,20 @@ export async function getRoomById(id: string): Promise<MeetingRoom | null> {
 /**
  * Retrieves a specific booking by its ID
  * @param {string} id - The ID of the booking to retrieve
+ * @param {boolean} cache - Whether to cache the booking data
  * @returns {Promise<Booking | null>} The booking if found, null otherwise
  * @description Fetches a single booking by its unique identifier.
  * Returns null if the booking is not found or if an error occurs.
  * Used for displaying booking details and calendar export.
  */
-export async function getBookingById(id: string): Promise<Booking | null> {
+export async function getBookingById(id: string, cache: boolean = true): Promise<Booking | null> {
   try {
     const validId = validateBookingId(id);
     const record = await fetchRecord(BOOKINGS_TABLE, validId, {
       cacheOptions: {
         tags: [CACHE_TAGS.BOOKING_BY_ID.replace('{id}', validId)]
       },
-      cache: 'force-cache'
+      cache: cache ? 'force-cache' : 'no-store'
     });
     return parseBooking(record);
   } catch (error) {
@@ -314,12 +319,9 @@ export async function createBooking(bookingData: {
     room: [validRoomId],
   });
 
-  revalidateTag(CACHE_TAGS.BOOKINGS_UPCOMING);
-  revalidateTag(CACHE_TAGS.BOOKING_BY_USER.replace('{userId}', validUserId));
-  revalidateTag(CACHE_TAGS.BOOKINGS_BY_ROOM.replace('{roomId}', validRoomId));
-  revalidateTag(CACHE_TAGS.BOOKINGS_FOR_DATE.replace('{roomId}', validRoomId).replace('{date}', bookingData.startTime));
-
-  return parseBooking(record);
+  const booking = parseBooking(record);
+  revalidateCacheForBooking(booking);
+  return booking;
 }
 
 /**
@@ -432,13 +434,9 @@ export async function updateBooking(
   }
 
   const record = await updateRecord(BOOKINGS_TABLE, validBookingId, { status: validStatus });
-  revalidateTag(CACHE_TAGS.BOOKINGS_UPCOMING);
-  revalidateTag(CACHE_TAGS.BOOKING_BY_USER.replace('{userId}', validUserId));
-  revalidateTag(CACHE_TAGS.BOOKINGS_BY_ROOM.replace('{roomId}', record.fields.room as string));
-  revalidateTag(CACHE_TAGS.BOOKINGS_FOR_DATE.replace('{roomId}', record.fields.room as string).replace('{date}', record.fields.startTime as string));
-  revalidateTag(CACHE_TAGS.BOOKING_BY_ID.replace('{id}', validBookingId));
-
-  return parseBooking(record);
+  const booking = parseBooking(record);
+  revalidateCacheForBooking(booking);
+  return booking;
 }
 
 /**
