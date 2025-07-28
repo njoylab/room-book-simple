@@ -8,6 +8,7 @@ import { CACHE_TAGS } from '@/app/constants/cache';
 import { getBookingById, getRoomBookings } from '@/lib/airtable';
 import { revalidateCacheForBooking } from '@/lib/cache';
 import { env } from '@/lib/env';
+import { createHmac } from 'crypto';
 import { revalidateTag } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -88,11 +89,9 @@ function verifyWebhookSignature(payload: string, signature: string): boolean {
   const cleanSignature = signature.replace('hmac-sha256=', '');
 
   // The webhook secret from Airtable is base64 encoded, decode it first
-  const crypto = require('crypto');
   const secretKey = Buffer.from(env.AIRTABLE_WEBHOOK_SECRET, 'base64');
 
-  const expectedSignature = crypto
-    .createHmac('sha256', secretKey)
+  const expectedSignature = createHmac('sha256', secretKey)
     .update(payload, 'utf8')
     .digest('hex');
 
@@ -137,7 +136,7 @@ async function invalidateCacheForChangedRecords(tableId: string, recordIds: stri
       revalidateTag(CACHE_TAGS.BOOKING_BY_ID.replace('{id}', recordId));
       // get the booking data from airtable
       const booking = await getBookingById(recordId, false);
-      revalidateCacheForBooking(booking || { id: recordId, user: '', room: '', startTime: '' });
+      revalidateCacheForBooking(booking || { id: recordId, user: '', room: '', startTime: '', userLabel: '', endTime: '', roomName: '' });
 
     });
   }
@@ -182,7 +181,7 @@ async function invalidateCacheForDestroyedRecords(tableId: string, recordIds: st
       // Invalidate specific booking cache
       // we rely on the cache
       const booking = await getBookingById(recordId);
-      revalidateCacheForBooking(booking || { id: recordId, user: '', room: '', startTime: '' });
+      revalidateCacheForBooking(booking || { id: recordId, user: '', room: '', startTime: '', userLabel: '', endTime: '', roomName: '' });
 
       // Since we can't get booking details, invalidate broader caches
       // This is less efficient but ensures consistency

@@ -1,5 +1,6 @@
 import { CACHE_TAGS } from "@/app/constants/cache";
 import { revalidateTag } from "next/cache";
+import { Booking } from "./types";
 
 /**
  * Revalidates all cache entries related to a specific booking.
@@ -24,7 +25,7 @@ import { revalidateTag } from "next/cache";
  * revalidateCacheForBooking(booking);
  * ```
  */
-export function revalidateCacheForBooking(booking: any) {
+export function revalidateCacheForBooking(booking: Booking) {
     revalidateTag(CACHE_TAGS.BOOKINGS_UPCOMING);
     revalidateTag(CACHE_TAGS.BOOKING_BY_ID.replace('{id}', booking.id));
     if (booking.user) {
