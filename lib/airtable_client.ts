@@ -18,6 +18,11 @@ interface AirtableResponse {
     offset?: string;
 }
 
+interface FetchOptions {
+    cacheOptions?: RequestInit['next'];
+    cache?: RequestInit['cache'];
+}
+
 /**
  * Generic function to fetch all records from an Airtable table with automatic pagination
  */
@@ -27,10 +32,10 @@ export async function fetchAllRecords(
         fields?: string[];
         sort?: Array<{ field: string; direction: 'asc' | 'desc' }>;
         filterByFormula?: string;
-        cacheOptions?: RequestInit['next'];
+        cache?: FetchOptions;
     } = {}
 ): Promise<AirtableRecord[]> {
-    const { fields, sort, filterByFormula, cacheOptions } = options;
+    const { fields, sort, filterByFormula, cache } = options;
     const params = new URLSearchParams();
 
     if (fields?.length) {
@@ -60,7 +65,8 @@ export async function fetchAllRecords(
 
         const response = await fetch(url, {
             headers,
-            next: cacheOptions
+            next: cache?.cacheOptions,
+            cache: cache?.cache
         });
 
         if (!response.ok) {
@@ -84,12 +90,13 @@ export async function fetchAllRecords(
 /**
  * Fetch a single record by ID
  */
-export async function fetchRecord(table: string, recordId: string, options: { cacheOptions?: RequestInit['next'] } = {}): Promise<AirtableRecord> {
+export async function fetchRecord(table: string, recordId: string, options: FetchOptions = {}): Promise<AirtableRecord> {
     const url = `${AIRTABLE_BASE_URL}/${table}/${recordId}`;
 
     const response = await fetch(url, {
         headers,
-        next: options.cacheOptions
+        next: options.cacheOptions,
+        cache: options.cache
     });
 
     if (!response.ok) {
