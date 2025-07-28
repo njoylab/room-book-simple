@@ -9,7 +9,10 @@
     "lint": "next lint",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "webhooks:setup": "npx tsx scripts/setup-webhooks.ts create",
+    "webhooks:list": "npx tsx scripts/setup-webhooks.ts list",
+    "webhooks:delete": "npx tsx scripts/setup-webhooks.ts delete"
   },
   "dependencies": {
     "@slack/bolt": "^4.4.0",
@@ -29,12 +32,14 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv": "^16.4.5",
     "eslint": "^9",
     "eslint-config-next": "15.4.1",
     "jest": "^30.0.4",
     "jest-environment-jsdom": "^30.0.4",
     "tailwindcss": "^4",
     "ts-jest": "^29.4.0",
+    "tsx": "^4.7.1",
     "typescript": "^5"
   }
 }

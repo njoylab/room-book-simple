@@ -22,6 +22,14 @@ const envSchema = z.object({
   AIRTABLE_MEETING_ROOMS_TABLE: z.string().default('MeetingRooms'),
   /** Name of the bookings table in Airtable */
   AIRTABLE_BOOKINGS_TABLE: z.string().default('Bookings'),
+  /** Airtable table ID for meeting rooms (needed for webhook processing) */
+  AIRTABLE_MEETING_ROOMS_TABLE_ID: z.string().optional(),
+  /** Airtable table ID for bookings (needed for webhook processing) */
+  AIRTABLE_BOOKINGS_TABLE_ID: z.string().optional(),
+
+  /** Webhook Configuration */
+  /** Secret key for Airtable webhook verification (optional for development) */
+  AIRTABLE_WEBHOOK_SECRET: z.string().optional(),
 
   /** Authentication Configuration */
   /** Slack OAuth client ID for authentication */
@@ -55,8 +63,8 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
 
   /** Calendar Integration Configuration */
-  /** Token for calendar feed authentication */
-  CALENDAR_FEED_TOKEN: z.string().min(1, 'CALENDAR_FEED_TOKEN is required'),
+  /** Token for calendar feed authentication (optional) */
+  CALENDAR_FEED_TOKEN: z.string().optional(),
 
   /** Meeting Duration Configuration */
   /** Maximum number of hours a meeting can last (1-24 hours, defaults to 8 hours) */

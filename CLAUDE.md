@@ -43,6 +43,11 @@ npm start
 
 # Run ESLint
 npm run lint
+
+# Webhook Management
+npm run webhooks:setup     # Create webhooks automatically
+npm run webhooks:list      # List existing webhooks
+npm run webhooks:delete    # Delete all webhooks
 ```
 
 ### Important Notes
@@ -115,6 +120,14 @@ NODE_ENV=development
 
 # Cache Configuration
 ROOM_CACHE_TIME=3600  # Room data cache time in seconds (300-2592000, optional - defaults to 3600 = 1 hour)
+
+# Calendar Integration (optional)
+CALENDAR_FEED_TOKEN=your_calendar_token_here  # For calendar feed authentication (optional)
+
+# Webhook Configuration (optional - for automatic cache invalidation)
+AIRTABLE_WEBHOOK_SECRET=your_webhook_secret_here  # Secret for webhook verification (optional for development)
+AIRTABLE_MEETING_ROOMS_TABLE_ID=tblxxxxxxxxx  # Table ID for meeting rooms (for webhook processing)
+AIRTABLE_BOOKINGS_TABLE_ID=tblxxxxxxxxx       # Table ID for bookings (for webhook processing)
 
 # Security Headers (optional)
 ALLOWED_ORIGINS=origin1,origin2
@@ -192,6 +205,77 @@ interface User {
 - `PATCH /api/bookings/[id]` - Update booking status (cancel/confirm, requires authentication)
 
 ## Airtable Integration
+
+### Webhook Setup for Cache Invalidation
+
+The application supports Airtable webhooks to automatically invalidate cache when rooms or bookings are modified. This ensures data consistency without manual cache clearing.
+
+#### Automatic Setup (Recommended):
+
+Use the included script to automatically create webhooks via Airtable API:
+
+```bash
+# Setup webhooks automatically
+npm run webhooks:setup
+
+# List existing webhooks
+npm run webhooks:list
+
+# Delete all webhooks
+npm run webhooks:delete
+
+# Replace existing webhooks
+npx tsx scripts/setup-webhooks.ts create --replace
+```
+
+The script will:
+- Find your rooms and bookings tables automatically
+- Create webhooks for both tables
+- Generate the required environment variables
+- Display setup instructions
+
+#### Manual Configuration Steps:
+
+If you prefer manual setup:
+
+1. **Configure Environment Variables:**
+   ```bash
+   # Add these to your .env.local file
+   AIRTABLE_WEBHOOK_SECRET=your_secure_webhook_secret
+   AIRTABLE_MEETING_ROOMS_TABLE_ID=tblxxxxxxxxx  # Found in Airtable table URL
+   AIRTABLE_BOOKINGS_TABLE_ID=tblxxxxxxxxx       # Found in Airtable table URL
+   ```
+
+2. **Create Webhooks in Airtable:**
+   - Go to your Airtable base
+   - Navigate to the "Automations" tab
+   - Create a new automation with "When record matches conditions" trigger
+   - Set conditions to trigger on record creation, update, or deletion
+   - Add webhook action with URL: `https://your-domain.com/api/webhooks/airtable`
+   - Set the webhook secret in Airtable to match your `AIRTABLE_WEBHOOK_SECRET`
+
+3. **Webhook Endpoint:**
+   - Endpoint: `POST /api/webhooks/airtable`
+   - Handles webhook verification using HMAC-SHA256
+   - Automatically invalidates relevant cache tags based on changed tables
+   - Supports both room and booking table changes
+
+#### Cache Invalidation Logic:
+
+**When Room Records Change:**
+- Invalidates `meeting-rooms` cache tag
+- Invalidates specific room cache: `meeting-room-by-{id}`
+
+**When Booking Records Change:**
+- Invalidates `bookings-all` and `bookings-upcoming` cache tags  
+- Invalidates specific booking cache: `booking-by-{id}`
+- General cache invalidation ensures fresh data on next request
+
+#### Security Features:
+- HMAC-SHA256 signature verification
+- Base ID validation to prevent cross-base webhooks
+- Rate limiting and error handling
+- Optional webhook secret (can be disabled in development)
 
 ### Database Setup
 The app expects two tables in Airtable:
