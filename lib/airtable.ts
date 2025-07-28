@@ -59,6 +59,7 @@ export async function getMeetingRooms(): Promise<MeetingRoom[]> {
     cache: {
       cacheOptions: {
         tags: [CACHE_TAGS.MEETING_ROOMS],
+        revalidate: 1 * 60 * 60 // 1 hour
       },
       cache: 'force-cache'
     }
@@ -231,7 +232,9 @@ export async function getRoomById(id: string): Promise<MeetingRoom | null> {
       {
         cacheOptions: {
           tags: [CACHE_TAGS.MEETING_ROOM_BY_ID.replace('{id}', validId)],
-        }
+          revalidate: 1 * 60 * 60 // 1 hour
+        },
+        cache: 'force-cache'
       }
     );
     return parseRoom([record])[0];
@@ -255,7 +258,8 @@ export async function getBookingById(id: string): Promise<Booking | null> {
     const record = await fetchRecord(BOOKINGS_TABLE, validId, {
       cacheOptions: {
         tags: [CACHE_TAGS.BOOKING_BY_ID.replace('{id}', validId)]
-      }
+      },
+      cache: 'force-cache'
     });
     return parseBooking(record);
   } catch (error) {
