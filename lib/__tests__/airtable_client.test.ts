@@ -205,7 +205,7 @@ describe('airtable_client', () => {
       });
 
       const cacheOptions = { revalidate: 300 };
-      await fetchAllRecords('TestTable', { cacheOptions });
+      await fetchAllRecords('TestTable', { cache: { cacheOptions } });
 
       expect(mockFetch).toHaveBeenCalledWith(
         expect.any(String),
