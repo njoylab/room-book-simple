@@ -62,6 +62,10 @@ const envSchema = z.object({
   /** Maximum number of hours a meeting can last (1-24 hours, defaults to 8 hours) */
   MAX_MEETING_HOURS: z.string().default('8').transform(val => parseInt(val) || 8).refine(val => val >= 1 && val <= 24, 'MAX_MEETING_HOURS must be between 1 and 24 hours'),
 
+  /** Cache Configuration */
+  /** Cache time for room data in seconds (defaults to 3600 = 1 hour) */
+  ROOM_CACHE_TIME: z.string().default('3600').transform(val => parseInt(val) || 3600).refine(val => val >= 300 && val <= 86400 * 30, 'ROOM_CACHE_TIME must be between 300 and 86400 seconds (5 minutes to 1 month)'),
+
 });
 
 /**

@@ -113,6 +113,9 @@ UPCOMING_MEETINGS_HOURS=24  # Hours to look ahead for upcoming meetings (0-168, 
 APP_BASE_URL=your_app_url
 NODE_ENV=development
 
+# Cache Configuration
+ROOM_CACHE_TIME=3600  # Room data cache time in seconds (300-2592000, optional - defaults to 3600 = 1 hour)
+
 # Security Headers (optional)
 ALLOWED_ORIGINS=origin1,origin2
 ```

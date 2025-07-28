@@ -14,7 +14,8 @@ jest.mock('../env', () => ({
     AIRTABLE_API_KEY: 'test-api-key',
     AIRTABLE_BASE_ID: 'test-base-id',
     AIRTABLE_MEETING_ROOMS_TABLE: 'MeetingRooms',
-    AIRTABLE_BOOKINGS_TABLE: 'Bookings'
+    AIRTABLE_BOOKINGS_TABLE: 'Bookings',
+    ROOM_CACHE_TIME: 3600
   }
 }));
 
@@ -30,13 +31,15 @@ import { getMeetingRooms, getBookings, getMaxMeetingHours } from '../airtable';
 import { MeetingRoom } from '../types';
 import { fetchAllRecords } from '../airtable_client';
 import { CACHE_TAGS } from '@/app/constants/cache';
+import { env } from '../env';
 
 // Mock the env module
 jest.mock('../env', () => ({
   env: {
     AIRTABLE_MEETING_ROOMS_TABLE: 'MeetingRooms',
     AIRTABLE_BOOKINGS_TABLE: 'Bookings',
-    MAX_MEETING_HOURS: 8
+    MAX_MEETING_HOURS: 8,
+    ROOM_CACHE_TIME: 3600
   }
 }));
 
@@ -74,7 +77,8 @@ describe('airtable', () => {
         sort: [{ field: 'name', direction: 'asc' }],
         cache: {
           cacheOptions: {
-            tags: [CACHE_TAGS.MEETING_ROOMS]
+            tags: [CACHE_TAGS.MEETING_ROOMS],
+            revalidate: env.ROOM_CACHE_TIME
           },
           cache: 'force-cache'
         }

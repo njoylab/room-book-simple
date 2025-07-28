@@ -160,6 +160,9 @@ MAX_MEETING_HOURS=8                                   # Default: 8 hours (1-24),
 APP_BASE_URL=http://localhost:3000                    # Optional: base URL for OAuth redirects
 NODE_ENV=development                                  # Default: "development"
 
+# Cache Configuration
+ROOM_CACHE_TIME=3600                                  # Optional: room data cache time in seconds (300-2592000), defaults to 3600 (1 hour)
+
 ```
 
 ### Required Variables:
@@ -178,6 +181,7 @@ NODE_ENV=development                                  # Default: "development"
 - `APP_TITLE` - Application title (default: "B4I")
 - `UPCOMING_MEETINGS_HOURS` - Hours to look ahead for upcoming meetings (0-168). If not set, defaults to showing meetings until end of current day
 - `MAX_MEETING_HOURS` - Maximum meeting duration in hours (1-24, default: 8). Can be overridden per room using the `maxMeetingHours` field in Airtable
+- `ROOM_CACHE_TIME` - Cache time for room data in seconds (300-2592000, default: 3600 = 1 hour). Controls how long room information is cached to improve performance
 - `APP_BASE_URL` - Base URL for OAuth redirects (auto-detected if not set)
 - `NODE_ENV` - Environment mode (default: "development")
 
