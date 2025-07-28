@@ -172,7 +172,8 @@ async function setupWebhooks() {
       const testResponse = await airtableRequest(`/${AIRTABLE_BASE_ID}/${AIRTABLE_MEETING_ROOMS_TABLE}?maxRecords=1`);
       console.log('✅ Basic API access works');
     } catch (error) {
-      console.error('❌ Basic API access failed:', error.message);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error('❌ Basic API access failed:', errorMessage);
       console.log('\n💡 This might mean:');
       console.log('   1. AIRTABLE_API_KEY is invalid');
       console.log('   2. AIRTABLE_BASE_ID is incorrect');
@@ -192,7 +193,8 @@ async function setupWebhooks() {
         console.log(`  - ${table.name} (${table.id})`);
       });
     } catch (error) {
-      console.error('❌ Meta API access failed:', error.message);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error('❌ Meta API access failed:', errorMessage);
       console.log('\n💡 This might mean:');
       console.log('   1. Your API token lacks schema.bases:read permission');
       console.log('   2. Your Airtable plan doesn\'t support Meta API');
