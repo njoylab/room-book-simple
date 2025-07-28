@@ -72,8 +72,11 @@ describe('airtable', () => {
       expect(fetchAllRecords).toHaveBeenCalledWith('MeetingRooms', {
         fields: ['name', 'capacity', 'notes', 'location', 'status', 'startTime', 'endTime', 'image', 'maxMeetingHours', 'tags'],
         sort: [{ field: 'name', direction: 'asc' }],
-        cacheOptions: {
-          tags: [CACHE_TAGS.MEETING_ROOMS]
+        cache: {
+          cacheOptions: {
+            tags: [CACHE_TAGS.MEETING_ROOMS]
+          },
+          cache: 'force-cache'
         }
       });
 
@@ -114,8 +117,11 @@ describe('airtable', () => {
       const bookings = await getBookings();
 
       expect(fetchAllRecords).toHaveBeenCalledWith('Bookings', {
-        cacheOptions: {
-          tags: [CACHE_TAGS.BOOKINGS_ALL]
+        cache: {
+          cacheOptions: {
+            tags: [CACHE_TAGS.BOOKINGS_ALL]
+          },
+          cache: 'force-cache'
         }
       });
 
