@@ -73,6 +73,7 @@ Before running this application, you'll need:
 4. **Create the Bookings table** with these fields:
    - `user` (Single line text) - Slack user ID
    - `userLabel` (Single line text) - Display name
+   - `userEmail` (Single line text) - User's email address (optional)
    - `startTime` (Date with time) - Booking start
    - `endTime` (Date with time) - Booking end
    - `note` (Long text) - Optional booking notes
@@ -142,6 +143,7 @@ When creating your Airtable API token, you need different permissions depending 
      - For **production**: `https://yourdomain.com/api/auth/slack`
    - Add these OAuth Scopes under "User Token Scopes":
      - `identity.basic` - Read user profile information
+     - `identity.email` - Read user email address
      - `identity.avatar` - Read user avatar
 
    **Note**: Slack requires HTTPS for OAuth redirects. In development, you must use a tool like ngrok to create an HTTPS tunnel to your local server.

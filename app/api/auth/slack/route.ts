@@ -4,7 +4,7 @@ import { withErrorHandler, createError } from '@/lib/error-handler';
 import { NextRequest, NextResponse } from 'next/server';
 
 
-const SCOPES = ['identity.basic'/*, 'identity.email'*/, 'identity.avatar'];
+const SCOPES = ['identity.basic', 'identity.email', 'identity.avatar'];
 
 /**
  * Handles Slack OAuth authentication flow
@@ -72,6 +72,7 @@ async function handleSlackAuth(request: NextRequest) {
     name: userData.user.name,
     image: userData.user.image_192,
     team: userData.team.name,
+    email: userData.user.email,
   });
 
   return response;

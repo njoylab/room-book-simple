@@ -288,6 +288,7 @@ export async function createBooking(bookingData: {
   roomId: string;
   userId: string;
   userLabel: string;
+  userEmail?: string;
   startTime: string;
   endTime: string;
   note?: string;
@@ -313,6 +314,7 @@ export async function createBooking(bookingData: {
   const record = await createRecord(BOOKINGS_TABLE, {
     user: validUserId,
     userLabel: sanitizedUserLabel,
+    userEmail: bookingData.userEmail || '',
     startTime: bookingData.startTime,
     endTime: bookingData.endTime,
     note: sanitizedNote,
@@ -449,6 +451,7 @@ function parseBooking(record: { id: string; fields: Record<string, unknown> }): 
     id: record.id,
     user: record.fields.user as string,
     userLabel: record.fields.userLabel as string,
+    userEmail: record.fields.userEmail as string,
     startTime: record.fields.startTime as string,
     endTime: record.fields.endTime as string,
     note: record.fields.note as string,

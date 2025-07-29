@@ -184,6 +184,7 @@ interface User {
   name: string;
   image: string;
   team: string;
+  email?: string;
 }
 ```
 

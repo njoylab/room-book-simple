@@ -49,7 +49,8 @@ const mockUserResponse = {
   user: {
     id: 'U123456789',
     name: 'Test User',
-    image_192: 'https://slack.com/avatar.jpg'
+    image_192: 'https://slack.com/avatar.jpg',
+    email: 'test.user@example.com'
   },
   team: {
     name: 'Test Team'
@@ -123,7 +124,8 @@ describe('/api/auth/slack', () => {
           id: 'U123456789',
           name: 'Test User',
           image: 'https://slack.com/avatar.jpg',
-          team: 'Test Team'
+          team: 'Test Team',
+          email: 'test.user@example.com'
         }
       );
 
@@ -188,7 +190,7 @@ describe('/api/auth/slack', () => {
 
       const location = response.headers.get('location');
       expect(location).toContain('client_id=test-client-id');
-      expect(location).toContain('user_scope=identity.basic,identity.avatar');
+      expect(location).toContain('user_scope=identity.basic,identity.email,identity.avatar');
       expect(location).toContain('redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fapi%2Fauth%2Fslack');
     });
 
@@ -258,7 +260,7 @@ describe('/api/auth/slack', () => {
         .mockResolvedValueOnce({
           json: () => Promise.resolve({
             ok: true,
-            user: { id: 'U123456789' }, // Missing name and image
+            user: { id: 'U123456789' }, // Missing name, image, and email
             team: { name: 'Test Team' }
           })
         });
@@ -274,7 +276,8 @@ describe('/api/auth/slack', () => {
           id: 'U123456789',
           name: undefined,
           image: undefined,
-          team: 'Test Team'
+          team: 'Test Team',
+          email: undefined
         }
       );
     });
