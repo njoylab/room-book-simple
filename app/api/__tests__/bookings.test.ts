@@ -152,6 +152,7 @@ describe('/api/bookings', () => {
         roomId: validBookingData.roomId,
         userId: mockUser.id,
         userLabel: mockUser.name,
+        userEmail: mockUser.email,
         startTime: validBookingData.startTime,
         endTime: validBookingData.endTime,
         note: validBookingData.note,

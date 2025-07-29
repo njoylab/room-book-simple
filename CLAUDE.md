@@ -163,6 +163,7 @@ interface Booking {
   id: string;
   userLabel: string; // Display name for the user
   user: string;      // User ID
+  userEmail: string; // Email address of the user
   startTime: string; // ISO datetime string
   endTime: string;   // ISO datetime string
   note?: string;
@@ -182,6 +183,7 @@ const BOOKING_STATUS = {
 interface User {
   id: string;
   name: string;
+  email: string;
   image: string;
   team: string;
 }
@@ -292,6 +294,7 @@ The app expects two tables in Airtable:
 2. **Bookings** table with fields:
    - user (string)
    - userLabel (string)
+   - userEmail (string)
    - startTime (ISO datetime string)
    - endTime (ISO datetime string)
    - note (string, optional)

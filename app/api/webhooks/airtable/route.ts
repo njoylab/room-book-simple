@@ -136,7 +136,7 @@ async function invalidateCacheForChangedRecords(tableId: string, recordIds: stri
       revalidateTag(CACHE_TAGS.BOOKING_BY_ID.replace('{id}', recordId));
       // get the booking data from airtable
       const booking = await getBookingById(recordId, false);
-      revalidateCacheForBooking(booking || { id: recordId, user: '', room: '', startTime: '', userLabel: '', endTime: '', roomName: '' });
+      revalidateCacheForBooking(booking || { id: recordId, user: '', room: '', startTime: '', userLabel: '', userEmail: '', endTime: '', roomName: '', roomLocation: '', status: '' });
 
     });
   }
@@ -181,7 +181,7 @@ async function invalidateCacheForDestroyedRecords(tableId: string, recordIds: st
       // Invalidate specific booking cache
       // we rely on the cache
       const booking = await getBookingById(recordId);
-      revalidateCacheForBooking(booking || { id: recordId, user: '', room: '', startTime: '', userLabel: '', endTime: '', roomName: '' });
+      revalidateCacheForBooking(booking || { id: recordId, user: '', room: '', startTime: '', userLabel: '', userEmail: '', endTime: '', roomName: '', roomLocation: '', status: '' });
 
       // Since we can't get booking details, invalidate broader caches
       // This is less efficient but ensures consistency

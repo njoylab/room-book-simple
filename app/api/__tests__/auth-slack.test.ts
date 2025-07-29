@@ -188,7 +188,7 @@ describe('/api/auth/slack', () => {
 
       const location = response.headers.get('location');
       expect(location).toContain('client_id=test-client-id');
-      expect(location).toContain('user_scope=identity.basic,identity.avatar');
+      expect(location).toContain('user_scope=identity.basic,identity.email,identity.avatar');
       expect(location).toContain('redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fapi%2Fauth%2Fslack');
     });
 

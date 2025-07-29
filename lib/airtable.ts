@@ -279,6 +279,7 @@ export async function getBookingById(id: string, cache: boolean = true): Promise
  * @param bookingData.roomId - The ID of the room to book
  * @param bookingData.userId - The ID of the user making the booking
  * @param bookingData.userLabel - The display name of the user
+ * @param bookingData.userEmail - The email address of the user
  * @param bookingData.startTime - The start time of the booking (ISO string)
  * @param bookingData.endTime - The end time of the booking (ISO string)
  * @param bookingData.note - Optional note for the booking
@@ -288,6 +289,7 @@ export async function createBooking(bookingData: {
   roomId: string;
   userId: string;
   userLabel: string;
+  userEmail: string;
   startTime: string;
   endTime: string;
   note?: string;
@@ -295,6 +297,7 @@ export async function createBooking(bookingData: {
   const validRoomId = validateRoomId(bookingData.roomId);
   const validUserId = validateUserId(bookingData.userId);
   const sanitizedUserLabel = sanitizeText(bookingData.userLabel);
+  const sanitizedUserEmail = sanitizeText(bookingData.userEmail);
   const sanitizedNote = sanitizeText(bookingData.note || '');
 
   validateDateTime(bookingData.startTime);
@@ -313,6 +316,7 @@ export async function createBooking(bookingData: {
   const record = await createRecord(BOOKINGS_TABLE, {
     user: validUserId,
     userLabel: sanitizedUserLabel,
+    userEmail: sanitizedUserEmail,
     startTime: bookingData.startTime,
     endTime: bookingData.endTime,
     note: sanitizedNote,
@@ -449,6 +453,7 @@ function parseBooking(record: { id: string; fields: Record<string, unknown> }): 
     id: record.id,
     user: record.fields.user as string,
     userLabel: record.fields.userLabel as string,
+    userEmail: record.fields.userEmail as string,
     startTime: record.fields.startTime as string,
     endTime: record.fields.endTime as string,
     note: record.fields.note as string,
