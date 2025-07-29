@@ -1,10 +1,10 @@
 import { loggedIn } from '@/lib/auth_server';
 import { env, getBaseUrl } from '@/lib/env';
-import { withErrorHandler, createError } from '@/lib/error-handler';
+import { createError, withErrorHandler } from '@/lib/error-handler';
 import { NextRequest, NextResponse } from 'next/server';
 
 
-const SCOPES = ['identity.basic'/*, 'identity.email'*/, 'identity.avatar'];
+const SCOPES = ['identity.basic', 'identity.email', 'identity.avatar'];
 
 /**
  * Handles Slack OAuth authentication flow
@@ -70,6 +70,7 @@ async function handleSlackAuth(request: NextRequest) {
   await loggedIn(response.cookies, {
     id: userData.user.id,
     name: userData.user.name,
+    email: userData.user.email,
     image: userData.user.image_192,
     team: userData.team.name,
   });

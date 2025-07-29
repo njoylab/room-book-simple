@@ -112,6 +112,7 @@ async function handleCreateBooking(request: NextRequest) {
       roomId: validatedData.roomId,
       userId: user.id,
       userLabel: user.name,
+      userEmail: user.email,
       startTime: validatedData.startTime,
       endTime: validatedData.endTime,
       note: validatedData.note,
