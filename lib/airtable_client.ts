@@ -98,8 +98,7 @@ export async function fetchRecord(
         cache?: RequestInit['cache'];
     } = {}
 ): Promise<AirtableRecord> {
-    let url = `${AIRTABLE_BASE_URL}/${table}/${recordId}`;
-
+    const url = `${AIRTABLE_BASE_URL}/${table}/${recordId}`;
 
     const response = await fetch(url, {
         headers,
