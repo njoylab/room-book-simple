@@ -91,22 +91,15 @@ export async function fetchAllRecords(
  * Fetch a single record by ID
  */
 export async function fetchRecord(
-    table: string, 
-    recordId: string, 
+    table: string,
+    recordId: string,
     options: {
-        fields?: string[];
         cacheOptions?: RequestInit['next'];
         cache?: RequestInit['cache'];
     } = {}
 ): Promise<AirtableRecord> {
     let url = `${AIRTABLE_BASE_URL}/${table}/${recordId}`;
-    
-    // Add fields parameter if specified
-    if (options.fields?.length) {
-        const params = new URLSearchParams();
-        options.fields.forEach(field => params.append('fields[]', field));
-        url += `?${params.toString()}`;
-    }
+
 
     const response = await fetch(url, {
         headers,

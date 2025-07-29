@@ -265,7 +265,6 @@ export async function getBookingById(id: string, cache: boolean = true): Promise
   try {
     const validId = validateBookingId(id);
     const record = await fetchRecord(BOOKINGS_TABLE, validId, {
-      fields: publicFieldsBookings,
       cacheOptions: {
         tags: [CACHE_TAGS.BOOKING_BY_ID.replace('{id}', validId)]
       },
@@ -438,9 +437,7 @@ export async function updateBooking(
   const validStatus = validateBookingStatus(updates.status);
 
   // First verify the booking exists and belongs to the user
-  const existingRecord = await fetchRecord(BOOKINGS_TABLE, validBookingId, {
-    fields: ['user'] // Only fetch user field for authorization check
-  });
+  const existingRecord = await fetchRecord(BOOKINGS_TABLE, validBookingId);
   if (!existingRecord || existingRecord.fields.user !== validUserId) {
     throw new Error('Unauthorized');
   }
