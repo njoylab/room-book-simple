@@ -22,18 +22,32 @@ describe('Slots Utilities', () => {
       const slots = generateTimeSlots(mockRoom, date, mockBookings);
 
       expect(slots).toHaveLength(20); // 10 hours * 2 slots per hour
-      expect(slots[0].startTime).toBe('2024-01-01T08:00:00.000Z');
-      expect(slots[0].endTime).toBe('2024-01-01T08:30:00.000Z');
+      
+      // Calculate expected start time (8:00 AM on the given date in local timezone)
+      const expectedStart = new Date(date);
+      expectedStart.setHours(8, 0, 0, 0);
+      const expectedEnd = new Date(expectedStart);
+      expectedEnd.setMinutes(30);
+      
+      expect(slots[0].startTime).toBe(expectedStart.toISOString());
+      expect(slots[0].endTime).toBe(expectedEnd.toISOString());
       expect(slots[0].isBooked).toBe(false);
     });
 
     it('should mark slots as booked when there are conflicts', () => {
       const date = new Date('2024-01-01T00:00:00.000Z');
+      
+      // Create booking times in local timezone (9:00-10:00 AM)
+      const bookingStart = new Date(date);
+      bookingStart.setHours(9, 0, 0, 0);
+      const bookingEnd = new Date(date);
+      bookingEnd.setHours(10, 0, 0, 0);
+      
       const conflictingBooking = {
         id: 'booking-1',
         roomId: 'test-room',
-        startTime: '2024-01-01T09:00:00.000Z',
-        endTime: '2024-01-01T10:00:00.000Z',
+        startTime: bookingStart.toISOString(),
+        endTime: bookingEnd.toISOString(),
         userLabel: 'Test User',
         note: 'Test booking',
         createdAt: '2024-01-01T00:00:00.000Z'
@@ -43,8 +57,8 @@ describe('Slots Utilities', () => {
 
       // Find the conflicting slots (9:00-10:00)
       const conflictingSlots = slots.filter(slot => 
-        slot.startTime >= '2024-01-01T09:00:00.000Z' && 
-        slot.endTime <= '2024-01-01T10:00:00.000Z'
+        slot.startTime >= bookingStart.toISOString() && 
+        slot.endTime <= bookingEnd.toISOString()
       );
 
       expect(conflictingSlots).toHaveLength(2); // 9:00-9:30 and 9:30-10:00

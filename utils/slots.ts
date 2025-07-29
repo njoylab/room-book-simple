@@ -23,6 +23,8 @@ export interface TimeSlot {
   isPast: boolean;
   /** Reference to the conflicting booking, if any */
   booking?: Booking;
+  /** Display label for the time slot */
+  label: string;
 }
 
 /**
@@ -64,10 +66,10 @@ export function generateTimeSlots(
   // Generate 30-minute slots
   for (let time = startSeconds; time < endSeconds; time += 1800) { // 1800 = 30 minutes
     const slotStart = new Date(date);
-    slotStart.setUTCHours(Math.floor(time / 3600), Math.floor((time % 3600) / 60), 0, 0);
+    slotStart.setHours(Math.floor(time / 3600), Math.floor((time % 3600) / 60), 0, 0);
 
     const slotEnd = new Date(slotStart);
-    slotEnd.setUTCMinutes(slotStart.getUTCMinutes() + 30);
+    slotEnd.setMinutes(slotStart.getMinutes() + 30);
 
     // Check if this slot conflicts with any booking
     const conflictingBooking = bookings.find(booking => {
@@ -84,9 +86,12 @@ export function generateTimeSlots(
     // Check if the slot is in the past
     const isPast = slotEnd <= now;
 
+    const fromLabel = `${Math.floor(time / 3600).toString().padStart(2, '0')}:${Math.floor((time % 3600) / 60).toString().padStart(2, '0')}`;
+    const toLabel = `${Math.floor((time + 1800) / 3600).toString().padStart(2, '0')}:${Math.floor(((time + 1800) % 3600) / 60).toString().padStart(2, '0')}`;
     slots.push({
       startTime: slotStart.toISOString(),
       endTime: slotEnd.toISOString(),
+      label: `${fromLabel} - ${toLabel}`,
       isBooked: !!conflictingBooking,
       isPast: isPast,
       booking: conflictingBooking

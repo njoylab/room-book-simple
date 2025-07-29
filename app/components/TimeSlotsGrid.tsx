@@ -7,7 +7,7 @@
 'use client';
 
 import { MeetingRoom, User } from '@/lib/types';
-import { formatSlotTime, TimeSlot } from '@/utils/slots';
+import { TimeSlot } from '@/utils/slots';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { BookingDetailModal } from './BookingDetailModal';
@@ -201,7 +201,7 @@ export function TimeSlotsGrid({ room, timeSlots, user, isUnavailable = false }: 
                                 >
                                     <div className="flex items-center justify-between mb-2">
                                         <div className="font-semibold text-sm">
-                                            {formatSlotTime(slot.startTime)} - {formatSlotTime(slot.endTime)}
+                                            {slot.label}
                                         </div>
                                         {getStatusIcon()}
                                     </div>
