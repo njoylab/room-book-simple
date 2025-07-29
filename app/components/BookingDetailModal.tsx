@@ -147,9 +147,6 @@ export function BookingDetailModal({ booking, isOpen, onClose, onCancelled, user
               <div className="ml-4">
                 <h3 className="text-sm font-semibold text-gray-900 mb-1">Booked by</h3>
                 <p className="text-lg font-semibold text-green-700">{booking.userLabel}</p>
-                {booking.userEmail && (
-                  <p className="text-sm text-green-600 mt-1">{booking.userEmail}</p>
-                )}
               </div>
             </div>
 

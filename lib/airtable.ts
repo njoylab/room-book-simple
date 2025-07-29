@@ -35,7 +35,7 @@ const BOOKINGS_TABLE = env.AIRTABLE_BOOKINGS_TABLE;
 
 /** Array of public fields to retrieve for meeting rooms (excludes sensitive data) */
 const publicFieldsRooms = ['name', 'capacity', 'notes', 'location', 'status', 'startTime', 'endTime', 'image', 'maxMeetingHours', 'tags'];
-
+const publicFieldsBookings = ['user', 'userLabel', 'startTime', 'endTime', 'note', 'room', 'roomName', 'roomLocation', 'status'];
 /**
  * Retrieves all meeting rooms from Airtable
  * @returns {Promise<MeetingRoom[]>} Array of meeting rooms sorted by name
@@ -81,6 +81,7 @@ export async function getMeetingRooms(): Promise<MeetingRoom[]> {
  */
 export async function getBookings(): Promise<Booking[]> {
   const records = await fetchAllRecords(BOOKINGS_TABLE, {
+    fields: publicFieldsBookings,
     cache: {
       cacheOptions: {
         tags: [CACHE_TAGS.BOOKINGS_ALL],
@@ -109,6 +110,7 @@ export async function getRoomBookings(roomId: string): Promise<Booking[]> {
   const startOfDay = new Date();
 
   const records = await fetchAllRecords(BOOKINGS_TABLE, {
+    fields: publicFieldsBookings,
     filterByFormula: `AND(
       {startTime} >= '${startOfDay.toISOString()}',
       {room} = '${sanitizeForFormula(validRoomId)}',
@@ -147,6 +149,7 @@ export async function getUserFutureBookings(userId: string): Promise<Booking[]> 
   const now = new Date();
 
   const records = await fetchAllRecords(BOOKINGS_TABLE, {
+    fields: publicFieldsBookings,
     filterByFormula: `AND(
       {endTime} >= '${now.toISOString()}',
       {user} = '${sanitizeForFormula(validUserId)}',
@@ -190,6 +193,7 @@ export async function getBookingsForDate(roomId: string, selectedDate: Date): Pr
   endOfDay.setHours(23, 59, 59, 999);
 
   const records = await fetchAllRecords(BOOKINGS_TABLE, {
+    fields: publicFieldsBookings,
     filterByFormula: `AND(
       {room} = '${sanitizeForFormula(validRoomId)}',
       {startTime} >= '${startOfDay.toISOString()}',
@@ -261,6 +265,7 @@ export async function getBookingById(id: string, cache: boolean = true): Promise
   try {
     const validId = validateBookingId(id);
     const record = await fetchRecord(BOOKINGS_TABLE, validId, {
+      fields: publicFieldsBookings,
       cacheOptions: {
         tags: [CACHE_TAGS.BOOKING_BY_ID.replace('{id}', validId)]
       },
@@ -394,6 +399,7 @@ export async function getUpcomingBookings(): Promise<Booking[]> {
   }
 
   const records = await fetchAllRecords(BOOKINGS_TABLE, {
+    fields: publicFieldsBookings,
     filterByFormula: `
       AND(
         NOT({status} = '${BOOKING_STATUS.CANCELLED}'),
@@ -432,7 +438,9 @@ export async function updateBooking(
   const validStatus = validateBookingStatus(updates.status);
 
   // First verify the booking exists and belongs to the user
-  const existingRecord = await fetchRecord(BOOKINGS_TABLE, validBookingId);
+  const existingRecord = await fetchRecord(BOOKINGS_TABLE, validBookingId, {
+    fields: ['user'] // Only fetch user field for authorization check
+  });
   if (!existingRecord || existingRecord.fields.user !== validUserId) {
     throw new Error('Unauthorized');
   }
@@ -453,7 +461,7 @@ function parseBooking(record: { id: string; fields: Record<string, unknown> }): 
     id: record.id,
     user: record.fields.user as string,
     userLabel: record.fields.userLabel as string,
-    userEmail: record.fields.userEmail as string,
+    // userEmail is not fetched from Airtable for performance reasons
     startTime: record.fields.startTime as string,
     endTime: record.fields.endTime as string,
     note: record.fields.note as string,

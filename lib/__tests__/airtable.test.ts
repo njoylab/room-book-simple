@@ -121,6 +121,7 @@ describe('airtable', () => {
       const bookings = await getBookings();
 
       expect(fetchAllRecords).toHaveBeenCalledWith('Bookings', {
+        fields: ['user', 'userLabel', 'startTime', 'endTime', 'note', 'room', 'roomName', 'roomLocation', 'status'],
         cache: {
           cacheOptions: {
             tags: [CACHE_TAGS.BOOKINGS_ALL]
