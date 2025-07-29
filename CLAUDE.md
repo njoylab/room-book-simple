@@ -163,7 +163,7 @@ interface Booking {
   id: string;
   userLabel: string; // Display name for the user
   user: string;      // User ID
-  userEmail: string; // Email address of the user
+  userEmail?: string; // Email address of the user (optional for performance)
   startTime: string; // ISO datetime string
   endTime: string;   // ISO datetime string
   note?: string;

@@ -78,8 +78,8 @@ export interface Booking {
   userLabel: string;
   /** User identifier who made the booking */
   user: string;
-  /** Email address of the user who made the booking */
-  userEmail: string;
+  /** Email address of the user who made the booking (optional for performance) */
+  userEmail?: string;
   /** ISO 8601 timestamp when the booking starts */
   startTime: string;
   /** ISO 8601 timestamp when the booking ends */
