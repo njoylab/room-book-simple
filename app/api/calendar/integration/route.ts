@@ -106,7 +106,6 @@ async function handleCalendarFeed(request: NextRequest): Promise<NextResponse> {
     'METHOD:PUBLISH',
     `X-WR-CALNAME:${calendarName}`,
     'X-WR-CALDESC:Meeting room bookings calendar feed',
-    'X-WR-TIMEZONE:UTC',
     ...calendarEvents,
     'END:VCALENDAR'
   ].join('\r\n');
