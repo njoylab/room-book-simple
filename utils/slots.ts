@@ -30,13 +30,13 @@ export interface TimeSlot {
 /**
  * Generates available time slots for a room on a specific date
  * @param {MeetingRoom} room - The meeting room to generate slots for
- * @param {Date} date - The date to generate slots for
+ * @param {Date} date - The date to generate slots for (interpreted as UTC date)
  * @param {Booking[]} bookings - Array of existing bookings for conflict checking
  * @returns {TimeSlot[]} Array of time slots with availability information
  * @description Creates 30-minute time slots within the room's operating hours,
  * checking each slot against existing bookings and marking past slots as unavailable.
- * The function uses the room's startTime and endTime properties (in seconds from midnight)
- * to determine operating hours.
+ * The function uses the room's startTime and endTime properties (in seconds from midnight UTC)
+ * to determine operating hours. All times are in UTC to ensure consistency across timezones.
  * @example
  * ```typescript
  * const room = {
@@ -66,10 +66,10 @@ export function generateTimeSlots(
   // Generate 30-minute slots
   for (let time = startSeconds; time < endSeconds; time += 1800) { // 1800 = 30 minutes
     const slotStart = new Date(date);
-    slotStart.setHours(Math.floor(time / 3600), Math.floor((time % 3600) / 60), 0, 0);
+    slotStart.setUTCHours(Math.floor(time / 3600), Math.floor((time % 3600) / 60), 0, 0);
 
     const slotEnd = new Date(slotStart);
-    slotEnd.setMinutes(slotStart.getMinutes() + 30);
+    slotEnd.setUTCMinutes(slotStart.getUTCMinutes() + 30);
 
     // Check if this slot conflicts with any booking
     const conflictingBooking = bookings.find(booking => {
@@ -119,7 +119,8 @@ export function formatSlotTime(isoString: string): string {
   return date.toLocaleTimeString(undefined, {
     hour: '2-digit',
     minute: '2-digit',
-    hour12: false
+    hour12: false,
+    timeZone: 'UTC'
   });
 }
 
