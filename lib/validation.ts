@@ -123,6 +123,11 @@ export const createBookingSchema = z.object({
 });
 
 /**
+ * Type for validated booking creation data
+ */
+export type CreateBookingData = z.infer<typeof createBookingSchema>;
+
+/**
  * Validation schema for updating booking status
  * @description Ensures only valid booking status values can be set when updating bookings.
  * @type {z.ZodObject}

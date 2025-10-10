@@ -6,8 +6,9 @@
 
 import { checkBookingConflict, createBooking, getBookings, getRoomById } from '@/lib/airtable';
 import { getServerUser } from '@/lib/auth_server';
+import { bookingHooks } from '@/lib/booking-hooks';
+import { createError, withErrorHandler } from '@/lib/error-handler';
 import { checkRateLimit, createBookingSchema, validateAndSanitize, validateMeetingDuration, validateOperatingHours } from '@/lib/validation';
-import { withErrorHandler, createError } from '@/lib/error-handler';
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
@@ -91,7 +92,7 @@ async function handleCreateBooking(request: NextRequest) {
       const minutes = Math.floor((seconds % 3600) / 60);
       return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
     };
-    
+
     const openTime = formatTime(room.startTime);
     const closeTime = formatTime(room.endTime);
     throw createError.validation(`Booking must be within the room's operating hours (${openTime} - ${closeTime})`);
@@ -107,26 +108,36 @@ async function handleCreateBooking(request: NextRequest) {
     throw createError.conflict('Room is already booked for this time slot');
   }
 
+  // Custom validation hooks
+  const hookContext = { user, room };
+  const validationResult = await bookingHooks.validateBooking(validatedData, hookContext);
+  if (!validationResult.valid) {
+    throw createError.validation(validationResult.error || 'Custom validation failed');
+  }
+
+  // Before create hooks
+  const modifiedBookingData = await bookingHooks.beforeCreate(validatedData, hookContext);
+
   try {
     const booking = await createBooking({
-      roomId: validatedData.roomId,
+      roomId: modifiedBookingData.roomId,
       userId: user.id,
       userLabel: user.name,
       userEmail: user.email,
-      startTime: validatedData.startTime,
-      endTime: validatedData.endTime,
-      note: validatedData.note,
+      startTime: modifiedBookingData.startTime,
+      endTime: modifiedBookingData.endTime,
+      note: modifiedBookingData.note,
     });
+
+    // After create hooks
+    await bookingHooks.afterCreate(booking, hookContext);
 
     return NextResponse.json(booking, { status: 201 });
   } catch (error) {
     if (error instanceof Error) {
-      if (error.message === 'Room is unavailable for booking') {
-        throw createError.validation('Room is unavailable for booking');
-      }
-      if (error.message === 'Room not found') {
-        throw createError.notFound('Room not found');
-      }
+      //   if (error.message === 'Room is unavailable for booking') {
+      //   if (error.message === 'Room not found') {}
+      throw createError.internal(error.message);
     }
     throw error;
   }

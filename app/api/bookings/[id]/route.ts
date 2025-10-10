@@ -2,6 +2,7 @@ import { updateBooking } from '@/lib/airtable';
 import { getServerUser } from '@/lib/auth_server';
 import { bookingIdSchema, checkRateLimit, updateBookingSchema, validateAndSanitize } from '@/lib/validation';
 import { handleApiError, createError } from '@/lib/error-handler';
+import { bookingHooks } from '@/lib/booking-hooks';
 import { NextRequest, NextResponse } from 'next/server';
 
 async function handleUpdateBooking(
@@ -25,8 +26,21 @@ async function handleUpdateBooking(
   const params = await context.params;
   const validatedBookingId = validateAndSanitize(bookingIdSchema, params.id);
 
+  // Before update hooks
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const hookContext = { user, room: null as any };
+  const modifiedUpdates = await bookingHooks.beforeUpdate(validatedBookingId, validatedUpdate, hookContext);
+
   try {
-    const updatedBooking = await updateBooking(validatedBookingId, validatedUpdate, user.id);
+    const updatedBooking = await updateBooking(
+      validatedBookingId,
+      { status: modifiedUpdates.status || validatedUpdate.status },
+      user.id
+    );
+
+    // After update hooks
+    await bookingHooks.afterUpdate(updatedBooking, hookContext);
+
     return NextResponse.json(updatedBooking);
   } catch (error) {
     if (error instanceof Error && error.message === 'Unauthorized') {
