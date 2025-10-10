@@ -43,6 +43,6 @@ next-env.d.ts
 .claude/
 
 # Custom installation logic
-custom/
+custom/*
 !custom/README.md
 !custom/*.example.ts
