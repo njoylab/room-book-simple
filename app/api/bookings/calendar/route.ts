@@ -64,7 +64,6 @@ async function handleUserBookingsExport(request: NextRequest): Promise<NextRespo
     'METHOD:PUBLISH',
     'X-WR-CALNAME:My Room Bookings',
     'X-WR-CALDESC:All my upcoming room bookings',
-    'X-WR-TIMEZONE:UTC',
     ...calendarEvents,
     'END:VCALENDAR'
   ].join('\r\n');

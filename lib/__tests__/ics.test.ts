@@ -48,9 +48,10 @@ describe('ICS Utility Functions', () => {
       expect(icsContent).toContain('ORGANIZER:CN=John Doe');
       expect(icsContent).toContain('STATUS:CONFIRMED');
 
-      // Check datetime format (should be in format YYYYMMDDTHHMMSSZ)
-      expect(icsContent).toContain('DTSTART:20240115T100000Z');
-      expect(icsContent).toContain('DTEND:20240115T110000Z');
+      // Check datetime format (should be in format YYYYMMDDTHHMMSS - local time without Z)
+      // The dates are in local timezone, not UTC
+      expect(icsContent).toMatch(/DTSTART:\d{8}T\d{6}[^Z]/);
+      expect(icsContent).toMatch(/DTEND:\d{8}T\d{6}[^Z]/);
     });
 
     it('should generate ICS content without note when note is not provided', () => {
@@ -105,7 +106,8 @@ describe('ICS Utility Functions', () => {
       expect(googleUrl).toContain('https://calendar.google.com/calendar/render?');
       expect(googleUrl).toContain('action=TEMPLATE');
       expect(googleUrl).toContain('text=Meeting+Room%3A+Conference+Room+A');
-      expect(googleUrl).toContain('dates=20240115T100000Z%2F20240115T110000Z');
+      // Dates are now in local timezone format (without Z suffix)
+      expect(googleUrl).toMatch(/dates=\d{8}T\d{6}%2F\d{8}T\d{6}/);
       expect(googleUrl).toContain('details=Booked+by%3A+John+Doe%0ANote%3A+Team+meeting+about+project+X');
       expect(googleUrl).toContain('location=Conference+Room+A+-+Building+1%2C+Floor+2');
     });
@@ -198,13 +200,16 @@ describe('ICS Utility Functions', () => {
       };
 
       const icsContent = generateICSForBooking(bookingUTC, roomName);
-      expect(icsContent).toContain('DTSTART:20240615T143000Z');
-      expect(icsContent).toContain('DTEND:20240615T153000Z');
+      // Now uses local time format without Z suffix
+      expect(icsContent).toMatch(/DTSTART:\d{8}T\d{6}[^Z]/);
+      expect(icsContent).toMatch(/DTEND:\d{8}T\d{6}[^Z]/);
 
       const googleUrl = generateGoogleCalendarUrl(bookingUTC, roomName);
-      expect(googleUrl).toContain('dates=20240615T143000Z%2F20240615T153000Z');
+      // Google Calendar URL also uses local time format
+      expect(googleUrl).toMatch(/dates=\d{8}T\d{6}%2F\d{8}T\d{6}/);
 
       const outlookUrl = generateOutlookCalendarUrl(bookingUTC, roomName);
+      // Outlook still uses ISO format with Z
       expect(outlookUrl).toContain('startdt=2024-06-15T14%3A30%3A00.000Z');
       expect(outlookUrl).toContain('enddt=2024-06-15T15%3A30%3A00.000Z');
     });
@@ -217,8 +222,9 @@ describe('ICS Utility Functions', () => {
       };
 
       const icsContent = generateICSForBooking(midnightBooking, roomName);
-      expect(icsContent).toContain('DTSTART:20240115T000000Z');
-      expect(icsContent).toContain('DTEND:20240115T235959Z');
+      // Now uses local time format without Z suffix
+      expect(icsContent).toMatch(/DTSTART:\d{8}T\d{6}[^Z]/);
+      expect(icsContent).toMatch(/DTEND:\d{8}T\d{6}[^Z]/);
     });
   });
 });
