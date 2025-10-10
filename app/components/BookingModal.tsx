@@ -453,7 +453,7 @@ export function BookingModal({ room, isOpen, initialDate, onClose, onSuccess, pr
                   </div>
                   <div>
                     <p className="text-lg font-bold text-primary">
-                      {slots[selectedSlots[0]]?.label} - {formatSlotTime(slots[selectedSlots[selectedSlots.length - 1]].endTime)}
+                      {formatSlotTime(slots[selectedSlots[0]].startTime)} - {formatSlotTime(slots[selectedSlots[selectedSlots.length - 1]].endTime)}
                     </p>
                     <p className="text-xs text-primary/70 mt-1">
                       Duration: {selectedSlots.length * 30} minutes ({selectedSlots.length} slot{selectedSlots.length > 1 ? 's' : ''})
