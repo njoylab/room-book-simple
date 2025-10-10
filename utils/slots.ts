@@ -104,13 +104,14 @@ export function generateTimeSlots(
 /**
  * Formats an ISO 8601 timestamp to display time in HH:MM format
  * @param {string} isoString - ISO 8601 timestamp string
- * @returns {string} Formatted time string in HH:MM format (24-hour)
+ * @returns {string} Formatted time string in HH:MM format (24-hour) in local timezone
  * @description Converts an ISO timestamp to a user-friendly time display format.
  * Uses 24-hour format for consistency in business applications.
+ * Times are displayed in the user's local timezone.
  * @example
  * ```typescript
- * formatSlotTime('2024-03-15T14:30:00.000Z'); // Returns "14:30"
- * formatSlotTime('2024-03-15T08:00:00.000Z'); // Returns "08:00"
+ * formatSlotTime('2024-03-15T14:30:00.000Z'); // Returns local time representation
+ * formatSlotTime('2024-03-15T08:00:00.000Z'); // Returns local time representation
  * ```
  */
 export function formatSlotTime(isoString: string): string {
@@ -118,8 +119,7 @@ export function formatSlotTime(isoString: string): string {
   return date.toLocaleTimeString(undefined, {
     hour: '2-digit',
     minute: '2-digit',
-    hour12: false,
-    timeZone: 'UTC'
+    hour12: false
   });
 }
 
