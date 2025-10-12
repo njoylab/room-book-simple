@@ -2,6 +2,7 @@ import { getBookingsForDate, getRoomById } from '@/lib/airtable';
 import { dateSchema, roomIdSchema, validateAndSanitize } from '@/lib/validation';
 import { handleApiError, createError } from '@/lib/error-handler';
 import { generateTimeSlots } from '@/utils/slots';
+import { parseDate } from '@/utils/date';
 import { NextRequest, NextResponse } from 'next/server';
 
 async function handleGetRoomSlots(
@@ -17,7 +18,7 @@ async function handleGetRoomSlots(
 
   // Validate date format
   const validatedDate = validateAndSanitize(dateSchema, dateParam);
-  const selectedDate = new Date(validatedDate);
+  const selectedDate = parseDate(validatedDate);
 
   const { id: roomId } = await params;
   const validatedRoomId = validateAndSanitize(roomIdSchema, roomId);
