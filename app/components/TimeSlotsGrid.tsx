@@ -9,9 +9,23 @@
 import { MeetingRoom, User } from '@/lib/types';
 import { TimeSlot } from '@/utils/slots';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { BookingDetailModal } from './BookingDetailModal';
 import { BookingModal } from './BookingModal';
+
+/**
+ * Formats an ISO 8601 timestamp to display time in HH:MM format in the user's local timezone
+ * @param {string} isoString - ISO 8601 timestamp string
+ * @returns {string} Formatted time string in HH:MM format (24-hour) in local timezone
+ */
+function formatSlotTime(isoString: string): string {
+  const date = new Date(isoString);
+  return date.toLocaleTimeString(undefined, {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  });
+}
 
 /**
  * Props for the TimeSlotsGrid component
@@ -60,6 +74,14 @@ export function TimeSlotsGrid({ room, timeSlots, user, isUnavailable = false }: 
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     /** Login notification state */
     const [showLoginNotification, setShowLoginNotification] = useState(false);
+
+    // Format time slot labels on the client side to use the user's local timezone
+    const formattedTimeSlots = useMemo(() => {
+        return timeSlots.map(slot => ({
+            ...slot,
+            label: `${formatSlotTime(slot.startTime)} - ${formatSlotTime(slot.endTime)}`
+        }));
+    }, [timeSlots]);
 
     /**
      * Handles time slot click events
@@ -124,7 +146,7 @@ export function TimeSlotsGrid({ room, timeSlots, user, isUnavailable = false }: 
     return (
         <>
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                {timeSlots.length === 0 ? (
+                {formattedTimeSlots.length === 0 ? (
                     <div className="text-center py-12">
                         <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
                             <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -136,7 +158,7 @@ export function TimeSlotsGrid({ room, timeSlots, user, isUnavailable = false }: 
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                        {timeSlots.map((slot, index) => {
+                        {formattedTimeSlots.map((slot, index) => {
                             const getSlotStyles = () => {
                                 if (slot.isPast) {
                                     return 'border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed hover:border-gray-200 hover:bg-gray-50';

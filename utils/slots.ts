@@ -86,13 +86,11 @@ export function generateTimeSlots(
     // Check if the slot is in the past
     const isPast = slotEnd <= now;
 
-    // Labels should reflect the viewer's local timezone
-    const fromLabel = formatSlotTime(slotStart.toISOString());
-    const toLabel = formatSlotTime(slotEnd.toISOString());
+    // Store ISO strings - labels will be formatted on the client side for proper timezone display
     slots.push({
       startTime: slotStart.toISOString(),
       endTime: slotEnd.toISOString(),
-      label: `${fromLabel} - ${toLabel}`,
+      label: '', // Will be populated on client side
       isBooked: !!conflictingBooking,
       isPast: isPast,
       booking: conflictingBooking
