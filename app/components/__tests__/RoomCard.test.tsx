@@ -70,9 +70,24 @@ describe('RoomCard', () => {
 
   it('should render operating hours', () => {
     render(<RoomCard {...defaultProps} />)
-    
-    // Should show formatted operating hours (08:00 - 18:00)
-    expect(screen.getByText(/08:00.*18:00/)).toBeInTheDocument()
+
+    // Times are converted from UTC to local timezone
+    // Calculate expected local times for mockRoom (28800 = 8:00 UTC, 64800 = 18:00 UTC)
+    // Use current date to match the component's DST calculation
+    const today = new Date();
+    const startDate = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate(), 0, 0, 0));
+    startDate.setUTCSeconds(28800);
+    const endDate = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate(), 0, 0, 0));
+    endDate.setUTCSeconds(64800);
+
+    const startHours = startDate.getHours().toString().padStart(2, '0');
+    const startMinutes = startDate.getMinutes().toString().padStart(2, '0');
+    const endHours = endDate.getHours().toString().padStart(2, '0');
+    const endMinutes = endDate.getMinutes().toString().padStart(2, '0');
+
+    const expectedPattern = new RegExp(`${startHours}:${startMinutes}.*${endHours}:${endMinutes}`);
+
+    expect(screen.getByText(expectedPattern)).toBeInTheDocument()
   })
 
   it('should be clickable and call onSelect', async () => {
@@ -171,13 +186,28 @@ describe('RoomCard', () => {
   it('should handle different time formats', () => {
     const customHoursRoom = {
       ...mockRoom,
-      startTime: 32400, // 9:00 AM
-      endTime: 61200,   // 5:00 PM
+      startTime: 32400, // 9:00 AM UTC
+      endTime: 61200,   // 5:00 PM UTC
     }
-    
+
     render(<RoomCard {...defaultProps} room={customHoursRoom} />)
-    
-    expect(screen.getByText(/09:00.*17:00/)).toBeInTheDocument()
+
+    // Times are converted from UTC to local timezone
+    // Calculate expected local times using current date to match component's DST calculation
+    const today = new Date();
+    const startDate = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate(), 0, 0, 0));
+    startDate.setUTCSeconds(32400);
+    const endDate = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate(), 0, 0, 0));
+    endDate.setUTCSeconds(61200);
+
+    const startHours = startDate.getHours().toString().padStart(2, '0');
+    const startMinutes = startDate.getMinutes().toString().padStart(2, '0');
+    const endHours = endDate.getHours().toString().padStart(2, '0');
+    const endMinutes = endDate.getMinutes().toString().padStart(2, '0');
+
+    const expectedPattern = new RegExp(`${startHours}:${startMinutes}.*${endHours}:${endMinutes}`);
+
+    expect(screen.getByText(expectedPattern)).toBeInTheDocument()
   })
 
   it('should handle special characters in room details', () => {

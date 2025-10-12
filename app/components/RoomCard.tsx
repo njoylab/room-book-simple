@@ -11,7 +11,6 @@ import { formatBlockedDays, formatTime } from '@/utils/date';
 import { formatSlotTime } from '@/utils/slots';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
 
 /**
  * Props for the RoomCard component
@@ -52,15 +51,9 @@ const defaultRoomImage = '/images/default-room.webp';
  * ```
  */
 export function RoomCard({ room, bookings }: RoomCardProps) {
-  const [mounted, setMounted] = useState(false);
   const now = new Date();
   /** Safely handle potentially undefined bookings array */
   const safeBookings = bookings || [];
-
-  // Only render timezone-dependent content after mounting (client-side only)
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   /**
    * Find current active booking (if any)

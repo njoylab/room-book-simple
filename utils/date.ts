@@ -147,8 +147,10 @@ export function formatDisplayDate(date: Date, locale: string = 'en-US'): string 
  * ```
  */
 export function getDayName(dayIndex: number, locale = 'en-US'): string {
+    // Normalize and coerce to integer day index (0-6)
+    const idx = ((Number(dayIndex) % 7) + 7) % 7;
     // Create a date that falls on the desired day (using Jan 5, 2025 as Sunday base)
-    const date = new Date(2025, 0, 5 + dayIndex);
+    const date = new Date(2025, 0, 5 + idx);
     return date.toLocaleDateString(locale, { weekday: 'long' });
 }
 
@@ -167,5 +169,8 @@ export function getDayName(dayIndex: number, locale = 'en-US'): string {
  * ```
  */
 export function formatBlockedDays(blockedDays: number[], locale = 'en-US'): string {
-    return blockedDays.map(day => getDayName(day, locale)).join(', ');
+    return blockedDays
+        .map(day => ((Number(day) % 7) + 7) % 7)
+        .map(day => getDayName(day, locale))
+        .join(', ');
 }
