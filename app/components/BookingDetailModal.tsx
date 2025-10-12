@@ -200,8 +200,8 @@ export function BookingDetailModal({ booking, isOpen, onClose, onCancelled, user
             </div>
           )}
 
-          {/* Calendar Export Section */}
-          {booking.status !== BOOKING_STATUS.CANCELLED && (
+          {/* Calendar Export Section - Only visible to booking owner */}
+          {user && user.id === booking.user && booking.status !== BOOKING_STATUS.CANCELLED && (
             <div className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-200">
               <div className="flex items-start">
                 <div className="flex-shrink-0">
