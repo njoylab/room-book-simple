@@ -34,7 +34,7 @@ const MEETING_ROOMS_TABLE = env.AIRTABLE_MEETING_ROOMS_TABLE;
 const BOOKINGS_TABLE = env.AIRTABLE_BOOKINGS_TABLE;
 
 /** Array of public fields to retrieve for meeting rooms (excludes sensitive data) */
-const publicFieldsRooms = ['name', 'capacity', 'notes', 'location', 'status', 'startTime', 'endTime', 'image', 'maxMeetingHours', 'tags'];
+const publicFieldsRooms = ['name', 'capacity', 'notes', 'location', 'status', 'startTime', 'endTime', 'image', 'maxMeetingHours', 'tags', 'blockedDays'];
 const publicFieldsBookings = ['user', 'userLabel', 'startTime', 'endTime', 'note', 'room', 'roomName', 'roomLocation', 'status'];
 /**
  * Retrieves all meeting rooms from Airtable
@@ -317,6 +317,13 @@ export async function createBooking(bookingData: {
     throw new Error('Room is unavailable for booking');
   }
 
+  // Check if the booking day is blocked
+  const bookingDate = new Date(bookingData.startTime);
+  const dayOfWeek = bookingDate.getDay(); // 0-6
+  if (room.blockedDays?.includes(dayOfWeek)) {
+    throw new Error('Room is not available on this day of the week');
+  }
+
   const record = await createRecord(BOOKINGS_TABLE, {
     user: validUserId,
     userLabel: sanitizedUserLabel,
@@ -487,6 +494,7 @@ function parseRoom(records: { id: string; fields: Record<string, unknown> }[]): 
     image: Array.isArray(record.fields.image) ? record.fields.image[0] : record.fields.image,
     maxMeetingHours: record.fields.maxMeetingHours ? Number(record.fields.maxMeetingHours) : undefined,
     tags: Array.isArray(record.fields.tags) ? record.fields.tags as string[] : undefined,
+    blockedDays: Array.isArray(record.fields.blockedDays) ? (record.fields.blockedDays as number[]) : undefined,
   }));
 }
 

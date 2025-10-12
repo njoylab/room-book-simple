@@ -379,7 +379,7 @@ export function BookingModal({ room, isOpen, initialDate, onClose, onSuccess, pr
                   </div>
                   {(room.startTime || room.endTime) && (
                     <div className="text-xs text-gray-500 bg-white px-3 py-1 rounded-full border">
-                      {formatTime(room.startTime)} - {formatTime(room.endTime)}
+                      {formatTime(room.startTime, true)} - {formatTime(room.endTime, true)}
                     </div>
                   )}
                   {room.maxMeetingHours && (
