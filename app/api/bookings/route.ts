@@ -93,8 +93,8 @@ async function handleCreateBooking(request: NextRequest) {
       return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
     };
 
-    const openTime = formatTime(room.startTime, true);
-    const closeTime = formatTime(room.endTime, true);
+    const openTime = formatTime(room.startTime);
+    const closeTime = formatTime(room.endTime);
     throw createError.validation(`Booking must be within the room's operating hours (${openTime} - ${closeTime})`);
   }
 
