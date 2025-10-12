@@ -9,7 +9,7 @@
 import { MeetingRoom } from '@/lib/types';
 import { formatTime } from '@/utils/date';
 import { formatSlotTime } from '@/utils/slots';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 
 /**
  * Represents a time slot in the booking modal
@@ -101,6 +101,14 @@ export function BookingModal({ room, isOpen, initialDate, onClose, onSuccess, pr
   /** Whether a preselected slot has been applied */
   const [hasPreselected, setHasPreselected] = useState(false);
 
+  // Format time slot labels on the client side to use the user's local timezone
+  const formattedSlots = useMemo(() => {
+    return slots.map(slot => ({
+      ...slot,
+      label: slot.label || `${formatSlotTime(slot.startTime)} - ${formatSlotTime(slot.endTime)}`
+    }));
+  }, [slots]);
+
   /** Current date for minimum date validation */
   const today = new Date();
   /** Today's date in YYYY-MM-DD format */
@@ -169,23 +177,23 @@ export function BookingModal({ room, isOpen, initialDate, onClose, onSuccess, pr
    * are loaded from the API, if the slot is available.
    */
   useEffect(() => {
-    if (preselectedSlot && slots.length > 0 && selectedSlots.length === 0 && !hasPreselected) {
-      const slotIndex = slots.findIndex(slot =>
+    if (preselectedSlot && formattedSlots.length > 0 && selectedSlots.length === 0 && !hasPreselected) {
+      const slotIndex = formattedSlots.findIndex(slot =>
         slot.startTime === preselectedSlot.startTime &&
         slot.endTime === preselectedSlot.endTime
       );
-      if (slotIndex !== -1 && slots[slotIndex].available) {
+      if (slotIndex !== -1 && formattedSlots[slotIndex].available) {
         setSelectedSlots([slotIndex]);
         setHasPreselected(true);
       }
     }
-  }, [preselectedSlot, slots, selectedSlots.length, hasPreselected]);
+  }, [preselectedSlot, formattedSlots, selectedSlots.length, hasPreselected]);
 
   const isSlotSelectable = (slotIndex: number) => {
-    const slot = slots[slotIndex];
+    const slot = formattedSlots[slotIndex];
     if (!slot.available) return false;
     if (selectedSlots.includes(slotIndex)) return true;
-    
+
     // If no slots selected, any available slot is selectable
     if (selectedSlots.length === 0) return true;
 
@@ -196,20 +204,20 @@ export function BookingModal({ room, isOpen, initialDate, onClose, onSuccess, pr
 
     // Slot is selectable if it's adjacent to the current selection range
     const isAdjacent = slotIndex === minSelected - 1 || slotIndex === maxSelected + 1;
-    
+
     if (!isAdjacent) return false;
-    
+
     // If adjacent, check if adding this slot would exceed the maximum duration
     const newSelection = [...selectedSlots, slotIndex].sort((a, b) => a - b);
     const totalMinutes = newSelection.length * 30; // Each slot is 30 minutes
     const maxHours = room.maxMeetingHours ?? 8; // Default to 8 hours if not set
     const maxMinutes = maxHours * 60;
-    
+
     return totalMinutes <= maxMinutes;
   };
 
   const handleSlotToggle = (slotIndex: number) => {
-    const slot = slots[slotIndex];
+    const slot = formattedSlots[slotIndex];
     if (!slot.available) return;
 
     setSelectedSlots(prev => {
@@ -250,8 +258,8 @@ export function BookingModal({ room, isOpen, initialDate, onClose, onSuccess, pr
     try {
       // Get start and end times from selected slots
       const sortedSlots = selectedSlots.sort((a, b) => a - b);
-      const startTime = slots[sortedSlots[0]].startTime;
-      const endTime = slots[sortedSlots[sortedSlots.length - 1]].endTime;
+      const startTime = formattedSlots[sortedSlots[0]].startTime;
+      const endTime = formattedSlots[sortedSlots[sortedSlots.length - 1]].endTime;
 
       const response = await fetch('/api/bookings', {
         method: 'POST',
@@ -397,7 +405,7 @@ export function BookingModal({ room, isOpen, initialDate, onClose, onSuccess, pr
                 ) : (
                   <>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-                      {slots.map((slot, index) => (
+                      {formattedSlots.map((slot, index) => (
                         <button
                           key={index}
                           type="button"
@@ -453,7 +461,7 @@ export function BookingModal({ room, isOpen, initialDate, onClose, onSuccess, pr
                   </div>
                   <div>
                     <p className="text-lg font-bold text-primary">
-                      {formatSlotTime(slots[selectedSlots[0]].startTime)} - {formatSlotTime(slots[selectedSlots[selectedSlots.length - 1]].endTime)}
+                      {formatSlotTime(formattedSlots[selectedSlots[0]].startTime)} - {formatSlotTime(formattedSlots[selectedSlots[selectedSlots.length - 1]].endTime)}
                     </p>
                     <p className="text-xs text-primary/70 mt-1">
                       Duration: {selectedSlots.length * 30} minutes ({selectedSlots.length} slot{selectedSlots.length > 1 ? 's' : ''})
