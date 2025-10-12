@@ -392,9 +392,9 @@ export async function getUpcomingBookings(): Promise<Booking[]> {
     // Use configured hours from now
     futureTime = new Date(now.getTime() + env.UPCOMING_MEETINGS_HOURS * 60 * 60 * 1000);
   } else {
-    // Default: until end of current day (23:59:59)
+    // Default: until end of current day in UTC (23:59:59)
     futureTime = new Date(now);
-    futureTime.setHours(23, 59, 59, 999);
+    futureTime.setUTCHours(23, 59, 59, 999);
   }
 
   const records = await fetchAllRecords(BOOKINGS_TABLE, {

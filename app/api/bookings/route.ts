@@ -135,9 +135,9 @@ async function handleCreateBooking(request: NextRequest) {
     return NextResponse.json(booking, { status: 201 });
   } catch (error) {
     if (error instanceof Error) {
-      //   if (error.message === 'Room is unavailable for booking') {
-      //   if (error.message === 'Room not found') {}
-      throw createError.internal(error.message);
+      // Do not leak internal error messages to clients
+      // Map any unexpected error to a generic internal error
+      throw createError.internal();
     }
     throw error;
   }

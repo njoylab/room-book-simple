@@ -23,11 +23,11 @@ describe('Slots Utilities', () => {
 
       expect(slots).toHaveLength(20); // 10 hours * 2 slots per hour
       
-      // Calculate expected start time (8:00 AM on the given date in local timezone)
+      // Calculate expected start time (8:00 AM UTC on the given date)
       const expectedStart = new Date(date);
-      expectedStart.setHours(8, 0, 0, 0);
+      expectedStart.setUTCHours(8, 0, 0, 0);
       const expectedEnd = new Date(expectedStart);
-      expectedEnd.setMinutes(30);
+      expectedEnd.setUTCMinutes(30);
       
       expect(slots[0].startTime).toBe(expectedStart.toISOString());
       expect(slots[0].endTime).toBe(expectedEnd.toISOString());
@@ -37,11 +37,11 @@ describe('Slots Utilities', () => {
     it('should mark slots as booked when there are conflicts', () => {
       const date = new Date('2024-01-01T00:00:00.000Z');
       
-      // Create booking times in local timezone (9:00-10:00 AM)
+      // Create booking times in UTC (9:00-10:00 AM)
       const bookingStart = new Date(date);
-      bookingStart.setHours(9, 0, 0, 0);
+      bookingStart.setUTCHours(9, 0, 0, 0);
       const bookingEnd = new Date(date);
-      bookingEnd.setHours(10, 0, 0, 0);
+      bookingEnd.setUTCHours(10, 0, 0, 0);
       
       const conflictingBooking = {
         id: 'booking-1',
