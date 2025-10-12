@@ -86,8 +86,9 @@ export function generateTimeSlots(
     // Check if the slot is in the past
     const isPast = slotEnd <= now;
 
-    const fromLabel = `${Math.floor(time / 3600).toString().padStart(2, '0')}:${Math.floor((time % 3600) / 60).toString().padStart(2, '0')}`;
-    const toLabel = `${Math.floor((time + 1800) / 3600).toString().padStart(2, '0')}:${Math.floor(((time + 1800) % 3600) / 60).toString().padStart(2, '0')}`;
+    // Labels should reflect the viewer's local timezone
+    const fromLabel = formatSlotTime(slotStart.toISOString());
+    const toLabel = formatSlotTime(slotEnd.toISOString());
     slots.push({
       startTime: slotStart.toISOString(),
       endTime: slotEnd.toISOString(),
@@ -119,8 +120,6 @@ export function formatSlotTime(isoString: string): string {
   return date.toLocaleTimeString(undefined, {
     hour: '2-digit',
     minute: '2-digit',
-    hour12: false,
-    timeZone: 'UTC'
+    hour12: false
   });
 }
-
