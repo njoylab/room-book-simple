@@ -2,6 +2,7 @@ import { env } from "@/lib/env";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Suspense } from "react";
+import { Footer } from "./components/Footer";
 import { Header } from "./components/Header";
 import { NotificationHandler } from "./components/NotificationHandler";
 import "./globals.css";
@@ -29,7 +30,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}
       >
         <Suspense fallback={
           <header className="bg-white shadow-sm border-b">
@@ -46,12 +47,14 @@ export default function RootLayout({
           <Header />
         </Suspense>
 
-        <main>
+        <main className="flex-1">
           <Suspense fallback={null}>
             <NotificationHandler />
           </Suspense>
           {children}
         </main>
+
+        <Footer />
       </body>
     </html>
   );
