@@ -5,20 +5,36 @@
  */
 
 /**
- * Formats a time value in seconds to HH:MM format
- * @param {number} time - Time in seconds from midnight (e.g., 28800 for 8:00 AM)
+ * Formats a time value in seconds to HH:MM format in the user's local timezone
+ * @param {number} time - Time in seconds from midnight UTC (e.g., 28800 for 8:00 AM UTC)
+ * @param {boolean} [convertFromUTC=false] - Whether to convert from UTC to local timezone
  * @returns {string} Formatted time string in HH:MM format (e.g., "08:00", "14:30")
- * @description Converts seconds since midnight to a human-readable time format.
- * Useful for displaying room operating hours and time slot labels.
+ * @description Converts seconds since midnight UTC to a human-readable time format
+ * in the user's local timezone. Useful for displaying room operating hours and time slot labels.
  * @example
  * ```typescript
- * formatTime(28800); // Returns "08:00" (8:00 AM)
- * formatTime(52200); // Returns "14:30" (2:30 PM)
+ * // If user is in UTC+1 timezone:
+ * formatTime(28800); // Returns "09:00" (8:00 UTC = 9:00 local)
+ * formatTime(52200); // Returns "15:30" (14:30 UTC = 15:30 local)
  * ```
  */
-export function formatTime(time: number) {
-    const hours = Math.floor(time / 3600);
-    const minutes = Math.floor((time % 3600) / 60);
+export function formatTime(time: number, convertFromUTC: boolean = false, anchorDate?: Date) {
+    if (!convertFromUTC) {
+        // Simple conversion without timezone adjustment
+        const hours = Math.floor(time / 3600);
+        const minutes = Math.floor((time % 3600) / 60);
+        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+    }
+
+    // Convert UTC time (seconds from midnight) to local timezone
+    // Anchor to the provided date or to today to respect DST offsets
+    const anchor = anchorDate ?? new Date();
+    const utcDate = new Date(Date.UTC(anchor.getUTCFullYear(), anchor.getUTCMonth(), anchor.getUTCDate(), 0, 0, 0));
+    utcDate.setUTCSeconds(time); // add seconds from midnight UTC
+
+    // Format in local timezone using the anchor day's offset (DST-aware)
+    const hours = utcDate.getHours();
+    const minutes = utcDate.getMinutes();
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 }
 
@@ -114,4 +130,42 @@ export function formatDisplayDate(date: Date, locale: string = 'en-US'): string 
             day: 'numeric'
         });
     }
+}
+
+/**
+ * Gets the name of a day of the week from its numeric index
+ * @param {number} dayIndex - Day index (0=Sunday, 1=Monday, ..., 6=Saturday)
+ * @param {string} [locale='en-US'] - Locale string for day name formatting
+ * @returns {string} The name of the day in the specified locale
+ * @description Converts a numeric day index to its corresponding day name.
+ * Uses native Date API for internationalization support.
+ * @example
+ * ```typescript
+ * getDayName(0);           // Returns "Sunday"
+ * getDayName(1);           // Returns "Monday"
+ * getDayName(5, 'it-IT');  // Returns "venerdì"
+ * ```
+ */
+export function getDayName(dayIndex: number, locale = 'en-US'): string {
+    // Create a date that falls on the desired day (using Jan 5, 2025 as Sunday base)
+    const date = new Date(2025, 0, 5 + dayIndex);
+    return date.toLocaleDateString(locale, { weekday: 'long' });
+}
+
+/**
+ * Formats an array of blocked day indices into a comma-separated string of day names
+ * @param {number[]} blockedDays - Array of day indices (0=Sunday, 1=Monday, ..., 6=Saturday)
+ * @param {string} [locale='en-US'] - Locale string for day name formatting
+ * @returns {string} Comma-separated list of day names
+ * @description Converts an array of numeric day indices to a human-readable
+ * comma-separated list of day names in the specified locale.
+ * @example
+ * ```typescript
+ * formatBlockedDays([0, 6]);        // Returns "Sunday, Saturday"
+ * formatBlockedDays([1, 3, 5]);     // Returns "Monday, Wednesday, Friday"
+ * formatBlockedDays([0, 6], 'it-IT'); // Returns "domenica, sabato"
+ * ```
+ */
+export function formatBlockedDays(blockedDays: number[], locale = 'en-US'): string {
+    return blockedDays.map(day => getDayName(day, locale)).join(', ');
 }

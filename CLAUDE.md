@@ -66,13 +66,14 @@ npm run webhooks:delete    # Delete all webhooks
 ### Component Architecture
 - **Header.tsx** - Main navigation header with Slack authentication and user menu
 - **UserMenu.tsx** - User dropdown menu with profile and logout options
-- **RoomCard.tsx** - Individual room display with booking functionality
+- **RoomCard.tsx** - Individual room display with booking functionality (client component with timezone-aware display)
+- **RoomDetails.tsx** - Compact badge-style room details display (client component with timezone conversion)
 - **BookingModal.tsx** - Modal for creating new bookings with time slot selection
 - **BookingDetailModal.tsx** - Modal for viewing and managing existing bookings
 - **TimeSlotsGrid.tsx** - Interactive grid for selecting available time slots
 - **TimeSlotsGridSkeleton.tsx** - Loading skeleton for time slots grid
 - **DateNavigation.tsx** - Date picker and navigation component
-- **RoomBookingView.tsx** - Main booking interface component
+- **RoomBookingView.tsx** - Main booking interface component (handles blocked day validation)
 - **AuthCheck.tsx** - Authentication wrapper component
 - **NotificationHandler.tsx** - Global notification system
 
@@ -152,10 +153,16 @@ interface MeetingRoom {
   notes?: string;
   location?: string;
   status?: string;
-  startTime: number; // Opening time in seconds from midnight (default: 28800 = 8:00 AM)
-  endTime: number;   // Closing time in seconds from midnight (default: 64800 = 6:00 PM)
+  startTime: number; // Opening time in seconds from midnight UTC (default: 28800 = 8:00 AM UTC)
+  endTime: number;   // Closing time in seconds from midnight UTC (default: 64800 = 6:00 PM UTC)
+  image: AirtableImage | null;
+  maxMeetingHours?: number; // Maximum meeting duration in hours (optional, overrides global setting)
+  tags?: string[]; // Array of tags for categorization
+  blockedDays?: number[]; // Array of weekday indices where room is unavailable (0=Sunday, 1=Monday, ..., 6=Saturday)
 }
 ```
+
+**Note on Times:** Room operating hours (`startTime` and `endTime`) are stored as seconds from midnight UTC in Airtable. The application automatically converts these times to the user's local timezone when displaying them in the UI.
 
 ### Booking Interface
 ```typescript
@@ -282,14 +289,41 @@ If you prefer manual setup:
 ### Database Setup
 The app expects two tables in Airtable:
 
-1. **MeetingRooms** table with fields: 
-   - name (string)
-   - capacity (number)
-   - notes (string, optional)
+1. **MeetingRooms** table with fields:
+   - name (string, required)
+   - capacity (number, required)
+   - notes (string, optional) - Room type or description
    - location (string, optional)
-   - status (string, optional - "Unavailable" disables booking)
-   - startTime (number, optional - opening time in seconds from midnight, default: 28800 = 8:00 AM)
-   - endTime (number, optional - closing time in seconds from midnight, default: 64800 = 6:00 PM)
+   - status (string, optional) - "Unavailable" disables new bookings
+   - startTime (number, optional) - Opening time in seconds from midnight UTC (default: 28800 = 8:00 AM UTC)
+   - endTime (number, optional) - Closing time in seconds from midnight UTC (default: 64800 = 6:00 PM UTC)
+   - image (attachment, optional) - Room image
+   - maxMeetingHours (number, optional) - Maximum booking duration in hours
+   - tags (multiple select or text, optional) - Room categorization tags
+   - blockedDays (text or multiple number, optional) - Days when room is unavailable (see below)
+
+#### Blocked Days Configuration
+The `blockedDays` field prevents bookings on specific weekdays. It accepts:
+- **Format 1 (String):** Comma-separated day indices: `"0,6"` (blocks Sunday and Saturday)
+- **Format 2 (Array):** Array of numbers: `[0, 6]` (blocks Sunday and Saturday)
+
+**Day Index Reference:**
+- 0 = Sunday
+- 1 = Monday
+- 2 = Tuesday
+- 3 = Wednesday
+- 4 = Thursday
+- 5 = Friday
+- 6 = Saturday
+
+**Examples:**
+- `"0,6"` or `[0,6]` - Block weekends (Sunday and Saturday)
+- `"1,3,5"` or `[1,3,5]` - Block Monday, Wednesday, Friday
+- Empty or null - No blocked days (available all week)
+
+**Validation:**
+- Client-side: Shows warning and disables slot selection for blocked days
+- Server-side: Rejects booking attempts with error "Room is not available on this day of the week"
 
 2. **Bookings** table with fields:
    - user (string)
@@ -351,7 +385,9 @@ The app expects two tables in Airtable:
 - **Time slot selection** - 30-minute slots with visual availability
 - **Consecutive slot selection** - Users can select multiple adjacent slots
 - **Conflict detection** - Prevents double-booking
-- **Room-specific hours** - Each room can have custom operating hours
+- **Room-specific hours** - Each room can have custom operating hours (stored in UTC, displayed in user's timezone)
+- **Blocked days** - Rooms can be unavailable on specific weekdays (e.g., weekends only, weekdays only)
+- **Timezone awareness** - Room hours automatically convert from UTC to user's local timezone
 - **Direct booking URLs** - `/book/[roomId]` for direct access
 - **Booking management** - View, cancel, and update existing bookings
 - **Upcoming meetings sidebar** - Shows current and future meetings (defaults to current day, configurable via UPCOMING_MEETINGS_HOURS)
@@ -399,7 +435,10 @@ The app expects two tables in Airtable:
 - **app/layout.tsx** - Root layout with global components
 
 ### Utilities
-- **utils/date.ts** - Date/time formatting utilities
+- **utils/date.ts** - Date/time formatting utilities with timezone conversion support
+  - `formatTime()` - Converts UTC seconds to local time format with optional timezone conversion
+  - `formatBlockedDays()` - Formats array of day indices to human-readable day names
+  - `getDayName()` - Gets localized day name from numeric index (0-6)
 - **utils/slots.ts** - Time slot calculation utilities
 
 ### Configuration

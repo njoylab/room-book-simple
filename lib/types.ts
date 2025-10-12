@@ -31,6 +31,8 @@ export interface MeetingRoom {
   maxMeetingHours?: number;
   /** Array of tags for grouping and categorizing rooms */
   tags?: string[];
+  /** Array of blocked days of the week (0=Sunday, 1=Monday, ..., 6=Saturday) */
+  blockedDays?: number[];
 }
 
 /**
