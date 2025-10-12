@@ -494,7 +494,11 @@ function parseRoom(records: { id: string; fields: Record<string, unknown> }[]): 
     image: Array.isArray(record.fields.image) ? record.fields.image[0] : record.fields.image,
     maxMeetingHours: record.fields.maxMeetingHours ? Number(record.fields.maxMeetingHours) : undefined,
     tags: Array.isArray(record.fields.tags) ? record.fields.tags as string[] : undefined,
-    blockedDays: Array.isArray(record.fields.blockedDays) ? (record.fields.blockedDays as number[]) : undefined,
+    blockedDays: Array.isArray(record.fields.blockedDays)
+      ? (record.fields.blockedDays as unknown[])
+          .map(v => Number(v))
+          .filter(v => Number.isInteger(v) && v >= 0 && v <= 6)
+      : undefined,
   }));
 }
 
