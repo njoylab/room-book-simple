@@ -77,6 +77,9 @@ export function RoomCard({ room, bookings }: RoomCardProps) {
   const isUnavailable = room.status === "Unavailable";
   /** Determine if room is currently available for booking */
   const isAvailable = !currentBooking && !isUnavailable;
+  /** Check if today is a blocked day for this room */
+  const todayDayIndex = now.getDay(); // 0=Sunday, 1=Monday, ..., 6=Saturday
+  const isTodayBlocked = room.blockedDays && room.blockedDays.includes(todayDayIndex);
 
   /**
    * Configuration object for different room status states
@@ -250,8 +253,8 @@ export function RoomCard({ room, bookings }: RoomCardProps) {
           </div>
         )}
 
-        {/* Blocked Days */}
-        {room.blockedDays && room.blockedDays.length > 0 && (
+        {/* Blocked Days - Only show on blocked days */}
+        {isTodayBlocked && (
           <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4 rounded-r-lg">
             <div className="flex items-start">
               <svg className="w-5 h-5 text-yellow-400 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
