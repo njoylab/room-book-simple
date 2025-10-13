@@ -219,17 +219,19 @@ export function RoomCard({ room, bookings }: RoomCardProps) {
 
         {/* Current Booking */}
         {currentBooking && (
-          <div className="bg-orange-50 border-l-4 border-orange-400 p-4 mb-4 rounded-r-lg">
-            <div className="flex items-start">
-              <svg className="w-5 h-5 text-orange-400 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="bg-orange-50 border-l-3 border-orange-400 px-3 py-2 mb-4 rounded-r-lg">
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4 text-orange-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-orange-800">Currently occupied</p>
-                <p className="text-sm text-orange-700">{currentBooking.userLabel}</p>
-                <p className="text-xs text-orange-600 mt-1">
+              <div className="flex-1 flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-medium text-orange-800">Currently occupied: </span>
+                  <span className="text-xs text-orange-700">{currentBooking.userLabel}</span>
+                </div>
+                <span className="text-xs text-orange-600 ml-2">
                   {formatSlotTime(currentBooking.startTime)} - {formatSlotTime(currentBooking.endTime)}
-                </p>
+                </span>
               </div>
             </div>
           </div>
@@ -237,17 +239,19 @@ export function RoomCard({ room, bookings }: RoomCardProps) {
 
         {/* Next Booking */}
         {nextBooking && !currentBooking && (
-          <div className="bg-primary/10 border-l-4 border-primary p-4 mb-4 rounded-r-lg">
-            <div className="flex items-start">
-              <svg className="w-5 h-5 text-primary mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="bg-primary/10 border-l-3 border-primary px-3 py-2 mb-4 rounded-r-lg">
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4 text-primary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-primary">Next booking</p>
-                <p className="text-sm text-primary/80">{nextBooking.userLabel}</p>
-                <p className="text-xs text-primary/70 mt-1">
+              <div className="flex-1 flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-medium text-primary">Next booking: </span>
+                  <span className="text-xs text-primary/80">{nextBooking.userLabel}</span>
+                </div>
+                <span className="text-xs text-primary/70 ml-2">
                   {formatSlotTime(nextBooking.startTime)} - {formatSlotTime(nextBooking.endTime)}
-                </p>
+                </span>
               </div>
             </div>
           </div>
