@@ -262,7 +262,7 @@ export function RoomCard({ room, bookings }: RoomCardProps) {
               </svg>
               <div className="flex-1">
                 <p className="text-sm font-medium text-yellow-800">Not available on</p>
-                <p className="text-sm text-yellow-700">{formatBlockedDays(room.blockedDays)}</p>
+                <p className="text-sm text-yellow-700">{formatBlockedDays(room.blockedDays || [])}</p>
               </div>
             </div>
           </div>

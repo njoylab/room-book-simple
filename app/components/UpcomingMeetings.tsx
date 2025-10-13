@@ -15,6 +15,87 @@ const getCachedMeetingRooms = cache(getMeetingRooms);
 const getCachedUpcomingBookings = cache(getUpcomingBookings);
 
 /**
+ * Consolidated booking interface for display purposes
+ * Represents one or more consecutive bookings from the same user in the same room
+ */
+interface ConsolidatedBooking extends Booking {
+  /** Array of original booking IDs that were consolidated */
+  originalBookingIds: string[];
+  /** Whether this represents multiple consolidated bookings */
+  isConsolidated: boolean;
+}
+
+/**
+ * Consolidates consecutive bookings from the same user in the same room
+ * @param {Booking[]} bookings - Array of bookings to consolidate
+ * @returns {ConsolidatedBooking[]} Array of consolidated bookings
+ * @description Groups consecutive bookings (same user, same room, no gaps) into single entries
+ * @example
+ * Input: [08:00-08:30, 08:30-09:00, 09:00-09:30, 09:30-10:00] by same user
+ * Output: [08:00-10:00] (consolidated)
+ */
+function consolidateBookings(bookings: Booking[]): ConsolidatedBooking[] {
+  if (bookings.length === 0) return [];
+
+  // Sort bookings by room, user, and start time
+  const sorted = [...bookings].sort((a, b) => {
+    if (a.room !== b.room) return a.room.localeCompare(b.room);
+    if (a.user !== b.user) return a.user.localeCompare(b.user);
+    return new Date(a.startTime).getTime() - new Date(b.startTime).getTime();
+  });
+
+  const consolidated: ConsolidatedBooking[] = [];
+  let current: ConsolidatedBooking | null = null;
+
+  for (const booking of sorted) {
+    if (!current) {
+      // Start a new consolidated booking
+      current = {
+        ...booking,
+        originalBookingIds: [booking.id],
+        isConsolidated: false
+      };
+    } else {
+      // Check if this booking is consecutive with the current one
+      const currentEndTime = new Date(current.endTime).getTime();
+      const bookingStartTime = new Date(booking.startTime).getTime();
+      const sameRoom = current.room === booking.room;
+      const sameUser = current.user === booking.user;
+      const isConsecutive = currentEndTime === bookingStartTime;
+
+      if (sameRoom && sameUser && isConsecutive) {
+        // Extend the current consolidated booking
+        current.endTime = booking.endTime;
+        current.originalBookingIds.push(booking.id);
+        current.isConsolidated = true;
+        // Keep the note from the first booking if available
+        if (!current.note && booking.note) {
+          current.note = booking.note;
+        }
+      } else {
+        // Save the current consolidated booking and start a new one
+        consolidated.push(current);
+        current = {
+          ...booking,
+          originalBookingIds: [booking.id],
+          isConsolidated: false
+        };
+      }
+    }
+  }
+
+  // Don't forget to add the last booking
+  if (current) {
+    consolidated.push(current);
+  }
+
+  // Sort consolidated bookings by start time (earliest first)
+  return consolidated.sort((a, b) =>
+    new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
+  );
+}
+
+/**
  * Upcoming meetings display component
  * @returns {Promise<JSX.Element>} Rendered upcoming meetings section
  * @description Displays the next 24 hours of meetings with:
@@ -54,6 +135,10 @@ export async function UpcomingMeetings() {
     return startTime > now;
   });
 
+  // Consolidate consecutive bookings for cleaner display
+  const consolidatedCurrentBookings = consolidateBookings(currentBookings);
+  const consolidatedUpcomingBookings = consolidateBookings(upcomingBookings);
+
   if (bookings.length === 0) {
     return (
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -80,16 +165,16 @@ export async function UpcomingMeetings() {
 
       <div className="space-y-4">
         {/* Current Meetings */}
-        {currentBookings.length > 0 && (
+        {consolidatedCurrentBookings.length > 0 && (
           <div>
             <h3 className="text-lg font-medium text-gray-800 mb-3 flex items-center">
               <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
               Currently Ongoing
             </h3>
             <div className="space-y-3">
-              {currentBookings.map((booking) => (
+              {consolidatedCurrentBookings.map((booking) => (
                 <MeetingItem
-                  key={booking.id}
+                  key={booking.originalBookingIds.join('-')}
                   booking={booking}
                   room={roomsMap.get(booking.room)}
                   isCurrent={true}
@@ -100,18 +185,18 @@ export async function UpcomingMeetings() {
         )}
 
         {/* Upcoming Meetings */}
-        {upcomingBookings.length > 0 && (
-          <div className={currentBookings.length > 0 ? 'mt-6' : ''}>
-            {currentBookings.length > 0 && (
+        {consolidatedUpcomingBookings.length > 0 && (
+          <div className={consolidatedCurrentBookings.length > 0 ? 'mt-6' : ''}>
+            {consolidatedCurrentBookings.length > 0 && (
               <h3 className="text-lg font-medium text-gray-800 mb-3 flex items-center">
                 <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
                 Coming Up
               </h3>
             )}
             <div className="space-y-3">
-              {upcomingBookings.slice(0, 8).map((booking) => (
+              {consolidatedUpcomingBookings.slice(0, 8).map((booking) => (
                 <MeetingItem
-                  key={booking.id}
+                  key={booking.originalBookingIds.join('-')}
                   booking={booking}
                   room={roomsMap.get(booking.room)}
                   isCurrent={false}
@@ -121,10 +206,10 @@ export async function UpcomingMeetings() {
           </div>
         )}
 
-        {upcomingBookings.length > 8 && (
+        {consolidatedUpcomingBookings.length > 8 && (
           <div className="mt-4 text-center">
             <p className="text-sm text-gray-500">
-              And {upcomingBookings.length - 8} more meetings...
+              And {consolidatedUpcomingBookings.length - 8} more meetings...
             </p>
           </div>
         )}
