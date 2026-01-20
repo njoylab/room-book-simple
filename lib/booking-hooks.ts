@@ -49,11 +49,11 @@ class BookingHooksManager {
 
     try {
       // Dynamic import with error handling - file may not exist
-      // @ts-expect-error - custom hooks file is optional and may not exist
       const customHooks = await import('../custom/booking-hooks').catch(() => null);
       if (customHooks) {
-        if (customHooks.default) {
-          this.hooks.push(customHooks.default);
+        const defaultHook = customHooks.default;
+        if (defaultHook) {
+          this.hooks.push(defaultHook);
         }
         if (customHooks.hooks && Array.isArray(customHooks.hooks)) {
           this.hooks.push(...customHooks.hooks);
