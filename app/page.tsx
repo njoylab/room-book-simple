@@ -1,6 +1,8 @@
 import { getMeetingRooms, getUpcomingBookings } from '@/lib/airtable';
+import { env } from '@/lib/env';
 import { Suspense, cache } from 'react';
-import { RoomCard } from './components/RoomCard';
+import { RoomGrid } from './components/RoomGrid';
+import { TagFilter } from './components/TagFilter';
 import { UpcomingMeetings } from './components/UpcomingMeetings';
 
 // Cache the getMeetingRooms function to avoid duplicate requests
@@ -11,6 +13,19 @@ export default async function Home() {
   const rooms = await getCachedMeetingRooms();
   const bookings = await getCachedUpcomingBookings();
 
+  // Extract unique tags from all rooms
+  const allTags = new Set<string>();
+  rooms.forEach(room => {
+    if (room.tags) {
+      room.tags.forEach(tag => allTags.add(tag));
+    }
+  });
+
+  // Determine available tags: use env config if set, otherwise show all tags from data
+  const availableTags = env.FILTER_ROOM_TAGS
+    ? env.FILTER_ROOM_TAGS.filter(tag => allTags.has(tag))
+    : Array.from(allTags).sort();
+
   return (
     <div className="min-h-screen bg-gray-50">
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -18,28 +33,8 @@ export default async function Home() {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Main Content - Rooms Grid */}
           <div className="flex-1">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {rooms.map((room) => (
-                <RoomCard
-                  key={room.id}
-                  room={room}
-                  bookings={bookings.filter(booking => booking.room === room.id)}
-                />
-              ))}
-            </div>
-
-            {/* Empty State */}
-            {rooms.length === 0 && (
-              <div className="text-center py-12">
-                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 48 48">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v20c0 4.418 7.163 8 16 8 1.381 0 2.721-.087 4-.252M8 14c0 4.418 7.163 8 16 8s16-3.582 16-8M8 14c0-4.418 7.163-8 16-8s16 3.582 16 8m0 0v14m0-4c0 4.418-7.163 8-16 8s-16-3.582-16-8" />
-                </svg>
-                <h3 className="mt-2 text-sm font-medium text-gray-900">No meeting rooms</h3>
-                <p className="mt-1 text-sm text-gray-500">
-                  No meeting rooms are currently configured.
-                </p>
-              </div>
-            )}
+            <TagFilter availableTags={availableTags} />
+            <RoomGrid rooms={rooms} bookings={bookings} />
           </div>
 
           {/* Sidebar - Upcoming Meetings */}
