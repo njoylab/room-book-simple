@@ -33,8 +33,14 @@ export default async function Home() {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Main Content - Rooms Grid */}
           <div className="flex-1">
-            <TagFilter availableTags={availableTags} />
-            <RoomGrid rooms={rooms} bookings={bookings} />
+            <Suspense
+              fallback={
+                <div className="text-sm text-gray-500">Loading rooms...</div>
+              }
+            >
+              <TagFilter availableTags={availableTags} />
+              <RoomGrid rooms={rooms} bookings={bookings} />
+            </Suspense>
           </div>
 
           {/* Sidebar - Upcoming Meetings */}

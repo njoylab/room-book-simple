@@ -4,8 +4,8 @@ This directory contains custom booking logic that can be tailored to specific in
 
 ## Setup
 
-1. Copy `booking-hooks.example.ts` to `booking-hooks.ts`
-2. Customize the hooks according to your requirements
+1. Edit `booking-hooks.ts` to add your custom hooks (it starts empty)
+2. Optionally reference `booking-hooks.example.ts` for examples
 3. The system will automatically load and use your custom hooks
 
 ## Available Hooks
@@ -63,12 +63,12 @@ Each hook receives a context object with:
 custom/
 ├── README.md                 # This file
 ├── booking-hooks.example.ts  # Example implementation
-└── booking-hooks.ts          # Your custom implementation (ignored by git)
+└── booking-hooks.ts          # Your custom implementation
 ```
 
 ## Notes
 
-- The `custom/` directory is ignored by git to prevent custom logic from being committed to the main repository
+- Keep `booking-hooks.ts` as a no-op if you don't need custom logic
 - Multiple hooks can be exported as an array if needed
 - Hooks are executed in the order they are defined
 - All hooks are optional - implement only what you need
