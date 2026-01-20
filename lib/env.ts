@@ -74,6 +74,10 @@ const envSchema = z.object({
   /** Cache time for room data in seconds (defaults to 3600 = 1 hour) */
   ROOM_CACHE_TIME: z.string().default('3600').transform(val => parseInt(val) || 3600).refine(val => val >= 300 && val <= 86400 * 30, 'ROOM_CACHE_TIME must be between 300 and 86400 seconds (5 minutes to 1 month)'),
 
+  /** Room Filtering Configuration */
+  /** Comma-separated list of tags to show as filter options (if empty, shows all tags from room data) */
+  FILTER_ROOM_TAGS: z.string().optional().transform(val => val ? val.split(',').map(tag => tag.trim()).filter(Boolean) : undefined),
+
 });
 
 /**
