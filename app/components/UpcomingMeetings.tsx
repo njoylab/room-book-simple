@@ -7,8 +7,8 @@
 import { getMeetingRooms, getUpcomingBookings } from '@/lib/airtable';
 import { env } from '@/lib/env';
 import { Booking, MeetingRoom } from '@/lib/types';
-import { formatSlotTime } from '@/utils/slots';
 import { cache } from 'react';
+import { LocalTimeRange } from './LocalTimeRange';
 
 // Cache the getMeetingRooms function to avoid duplicate requests
 const getCachedMeetingRooms = cache(getMeetingRooms);
@@ -263,7 +263,7 @@ function MeetingItem({ booking, room, isCurrent }: MeetingItemProps) {
             <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span>{formatSlotTime(booking.startTime)} - {formatSlotTime(booking.endTime)}</span>
+            <LocalTimeRange startTime={booking.startTime} endTime={booking.endTime} />
           </div>
 
           <div className="flex items-center text-sm text-gray-600">
