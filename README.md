@@ -25,6 +25,7 @@ A modern, responsive meeting room booking application built with Next.js 15, fea
 - **Slack OAuth integration** - Seamless login with Slack credentials
 - **Rate limiting** - Prevents abuse with configurable limits
 - **Input validation** - Comprehensive validation using Zod schemas
+- **External API bearer tokens** - Dedicated tokens for trusted clients like local LLM tools
 
 ### 🎨 User Experience
 - **Responsive design** - Mobile-first approach with Tailwind CSS
@@ -176,6 +177,8 @@ SLACK_SIGNING_SECRET=your_slack_signing_secret
 SESSION_SECRET=your-32-character-session-secret-here  # Must be exactly 32 characters
 SESSION_COOKIE_NAME=room_booking_user                 # Default: "room_booking_user"
 SESSION_DURATION_HOURS=168                            # Default: 168 hours (7 days), range: 1-168
+API_TOKEN_SECRET=your-32-character-api-token-secret   # Required for external bearer tokens
+API_TOKEN_DURATION_HOURS=720                          # Optional: token lifetime in hours (default: 30 days)
 
 # Application Configuration
 APP_TITLE=B4I                                         # Default: "B4I"
@@ -210,6 +213,9 @@ CALENDAR_FEED_TOKEN=your_calendar_token_here          # For calendar feed authen
 - `AIRTABLE_BOOKINGS_TABLE` - Name of bookings table (default: "Bookings")
 - `SESSION_COOKIE_NAME` - Session cookie name (default: "room_booking_user")
 - `SESSION_DURATION_HOURS` - Session duration in hours (1-168, default: 168 = 7 days)
+- `API_TOKEN_SECRET` - 32-character secret used to sign external API bearer tokens
+- `API_TOKEN_DURATION_HOURS` - External API token duration in hours (1-2160, default: 720 = 30 days)
+- `EXTERNAL_API_ENABLED` - Enables external API routes and API Access UI (default: `false`)
 - `APP_TITLE` - Application title (default: "B4I")
 - `UPCOMING_MEETINGS_HOURS` - Hours to look ahead for upcoming meetings (0-168). If not set, defaults to showing meetings until end of current day
 - `MAX_MEETING_HOURS` - Maximum meeting duration in hours (1-24, default: 8). Can be overridden per room using the `maxMeetingHours` field in Airtable
@@ -218,6 +224,32 @@ CALENDAR_FEED_TOKEN=your_calendar_token_here          # For calendar feed authen
 - `AIRTABLE_MEETING_ROOMS_TABLE_ID` - Table ID for meeting rooms webhook processing
 - `AIRTABLE_BOOKINGS_TABLE_ID` - Table ID for bookings webhook processing
 - `CALENDAR_FEED_TOKEN` - Token for calendar feed authentication (optional)
+
+## External API
+
+When `EXTERNAL_API_ENABLED=true`, the application can issue bearer tokens for external clients such as local LLM tools.
+
+1. Log into the web app normally.
+2. Call `POST /api/auth/api-token` with your session cookie.
+3. Use the returned token as `Authorization: Bearer <token>` against:
+   - `GET /api/public/me`
+   - `GET /api/public/rooms`
+   - `GET /api/public/rooms/:id/slots?date=YYYY-MM-DD`
+   - `POST /api/public/bookings`
+4. Machine-readable specs:
+   - static: `/openapi-public.json`
+   - dynamic: `/api/public/openapi`
+
+Example booking payload:
+
+```json
+{
+  "roomId": "rec12345678901234",
+  "startTime": "2026-04-04T10:00:00.000Z",
+  "endTime": "2026-04-04T11:00:00.000Z",
+  "note": "Booked via external client"
+}
+```
 - `APP_BASE_URL` - Base URL for OAuth redirects (auto-detected if not set)
 - `NODE_ENV` - Environment mode (default: "development")
 

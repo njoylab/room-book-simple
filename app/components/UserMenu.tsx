@@ -18,6 +18,8 @@ import { useEffect, useRef, useState } from 'react';
 interface UserMenuProps {
     /** The authenticated user object */
     user: User;
+    /** Whether API access UI is enabled */
+    apiAccessEnabled: boolean;
 }
 
 /**
@@ -39,7 +41,7 @@ interface UserMenuProps {
  * <UserMenu user={currentUser} />
  * ```
  */
-export function UserMenu({ user }: UserMenuProps) {
+export function UserMenu({ user, apiAccessEnabled }: UserMenuProps) {
     /** Controls dropdown menu visibility */
     const [isOpen, setIsOpen] = useState(false);
     /** Reference to the menu container for click-outside detection */
@@ -123,6 +125,19 @@ export function UserMenu({ user }: UserMenuProps) {
                                 <span>My Bookings</span>
                             </div>
                         </a>
+                        {apiAccessEnabled && (
+                            <a
+                                href="/api-access"
+                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                            >
+                                <div className="flex items-center space-x-3">
+                                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11c0 .5522-.4477 1-1 1s-1-.4478-1-1 .4477-1 1-1 1 .4478 1 1zm0 0V8m6 9a2 2 0 002-2v-3.28a2 2 0 00-.59-1.41l-5.72-5.72A2 2 0 0012.28 4H8a2 2 0 00-2 2v10a2 2 0 002 2h10z" />
+                                    </svg>
+                                    <span>API Access</span>
+                                </div>
+                            </a>
+                        )}
                     </div>
 
                     <div className="border-t border-gray-100 pt-2">

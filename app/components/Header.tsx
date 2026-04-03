@@ -6,7 +6,7 @@
 
 // app/components/ImprovedHeader.tsx
 import { getServerUser } from '@/lib/auth_server';
-import { env } from '@/lib/env';
+import { env, isExternalApiEnabled } from '@/lib/env';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { UserMenu } from './UserMenu';
@@ -63,13 +63,21 @@ export async function Header() {
                                 >
                                     My Bookings
                                 </Link>
+                                {isExternalApiEnabled && (
+                                    <Link
+                                        href="/api-access"
+                                        className="text-gray-600 hover:text-gray-900 transition-colors"
+                                    >
+                                        API Access
+                                    </Link>
+                                )}
                             </nav>
                         )}
                     </div>
 
                     <div className="flex items-center space-x-4">
                         {user ? (
-                            <UserMenu user={user} />
+                            <UserMenu user={user} apiAccessEnabled={isExternalApiEnabled} />
                         ) : (
                             <div className="flex items-center space-x-3">
                                 <Link
@@ -89,4 +97,3 @@ export async function Header() {
         </header>
     );
 }
-

@@ -153,6 +153,8 @@ process.env = {
   SLACK_CLIENT_SECRET: 'mock_client_secret_value',
   SLACK_SIGNING_SECRET: 'mock_signing_secret_value',
   SESSION_SECRET: 'mocksessionsecret32charsfortestX',
+  API_TOKEN_SECRET: 'mockapitokensecret32charsfortest',
+  EXTERNAL_API_ENABLED: 'true',
   APP_BASE_URL: 'http://localhost:3000',
   CALENDAR_FEED_TOKEN: 'mock_calendar_feed_token_value',
 }

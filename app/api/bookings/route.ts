@@ -4,11 +4,10 @@
  * with authentication, validation, rate limiting, and conflict checking.
  */
 
-import { checkBookingConflict, createBooking, getBookings, getRoomById } from '@/lib/airtable';
+import { getBookings } from '@/lib/airtable';
 import { getServerUser } from '@/lib/auth_server';
-import { bookingHooks } from '@/lib/booking-hooks';
+import { createValidatedBookingForUser } from '@/lib/booking-service';
 import { createError, withErrorHandler } from '@/lib/error-handler';
-import { checkRateLimit, createBookingSchema, validateAndSanitize, validateMeetingDuration, validateOperatingHours } from '@/lib/validation';
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
@@ -62,85 +61,15 @@ async function handleCreateBooking(request: NextRequest) {
     throw createError.authentication();
   }
 
-  // Rate limiting
   const clientIP = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
-  if (!checkRateLimit(`booking_${user.id}_${clientIP}`, 10, 60 * 1000)) {
-    throw createError.rateLimit();
-  }
-
   const body = await request.json();
+  const booking = await createValidatedBookingForUser({
+    user,
+    body,
+    rateLimitKey: `booking_${user.id}_${clientIP}`,
+  });
 
-  // Validazione input con Zod
-  const validatedData = validateAndSanitize(createBookingSchema, body);
-
-  // Get room information for duration validation
-  const room = await getRoomById(validatedData.roomId);
-  if (!room) {
-    throw createError.notFound('Room not found');
-  }
-
-  // Validate meeting duration
-  if (!validateMeetingDuration(validatedData.startTime, validatedData.endTime, room)) {
-    const maxHours = room.maxMeetingHours ?? 8; // Default fallback
-    throw createError.validation(`Meeting duration exceeds the maximum allowed time of ${maxHours} hours for this room`);
-  }
-
-  // Validate operating hours
-  if (!validateOperatingHours(validatedData.startTime, validatedData.endTime, room)) {
-    const formatTime = (seconds: number) => {
-      const hours = Math.floor(seconds / 3600);
-      const minutes = Math.floor((seconds % 3600) / 60);
-      return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-    };
-
-    const openTime = formatTime(room.startTime);
-    const closeTime = formatTime(room.endTime);
-    throw createError.validation(`Booking must be within the room's operating hours (${openTime} - ${closeTime})`);
-  }
-
-  const hasConflict = await checkBookingConflict(
-    validatedData.roomId,
-    validatedData.startTime,
-    validatedData.endTime
-  );
-
-  if (hasConflict) {
-    throw createError.conflict('Room is already booked for this time slot');
-  }
-
-  // Custom validation hooks
-  const hookContext = { user, room };
-  const validationResult = await bookingHooks.validateBooking(validatedData, hookContext);
-  if (!validationResult.valid) {
-    throw createError.validation(validationResult.error || 'Custom validation failed');
-  }
-
-  // Before create hooks
-  const modifiedBookingData = await bookingHooks.beforeCreate(validatedData, hookContext);
-
-  try {
-    const booking = await createBooking({
-      roomId: modifiedBookingData.roomId,
-      userId: user.id,
-      userLabel: user.name,
-      userEmail: user.email,
-      startTime: modifiedBookingData.startTime,
-      endTime: modifiedBookingData.endTime,
-      note: modifiedBookingData.note,
-    });
-
-    // After create hooks
-    await bookingHooks.afterCreate(booking, hookContext);
-
-    return NextResponse.json(booking, { status: 201 });
-  } catch (error) {
-    if (error instanceof Error) {
-      // Do not leak internal error messages to clients
-      // Map any unexpected error to a generic internal error
-      throw createError.internal();
-    }
-    throw error;
-  }
+  return NextResponse.json(booking, { status: 201 });
 }
 
 /**

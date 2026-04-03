@@ -41,6 +41,9 @@ describe('Environment Configuration', () => {
       SESSION_DURATION_HOURS: z.string().default('168').transform(val => parseInt(val) || 168).refine(val => val >= 1 && val <= 168, 'SESSION_DURATION_HOURS must be between 1 and 168 hours (1 week)'),
       APP_TITLE: z.string().default('B4I'),
       UPCOMING_MEETINGS_HOURS: z.string().transform(val => parseInt(val) || 0).refine(val => val >= 0 && val <= 168, 'UPCOMING_MEETINGS_HOURS must be between 0 and 168 hours (1 week)').optional(),
+      API_TOKEN_SECRET: z.string().length(32, 'API_TOKEN_SECRET must be exactly 32 characters').optional(),
+      API_TOKEN_DURATION_HOURS: z.string().default('720').transform(val => parseInt(val) || 720).refine(val => val >= 1 && val <= 2160, 'API_TOKEN_DURATION_HOURS must be between 1 and 2160 hours (90 days)'),
+      EXTERNAL_API_ENABLED: z.string().default('false').transform(val => val === 'true'),
       APP_BASE_URL: z.string().url().optional(),
       NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
     })
@@ -53,6 +56,7 @@ describe('Environment Configuration', () => {
       expect(result.SLACK_CLIENT_ID).toBe('test_client_id')
       expect(result.SESSION_SECRET).toBe('test_session_secret_32_chars_123')
       expect(result.NODE_ENV).toBe('test')
+      expect(result.EXTERNAL_API_ENABLED).toBe(false)
     })
 
     it('should apply default values correctly', () => {
@@ -71,6 +75,7 @@ describe('Environment Configuration', () => {
       expect(result.AIRTABLE_BOOKINGS_TABLE).toBe('Bookings')
       expect(result.SESSION_COOKIE_NAME).toBe('room_booking_user')
       expect(result.NODE_ENV).toBe('development')
+      expect(result.EXTERNAL_API_ENABLED).toBe(false)
     })
 
     it('should reject missing required variables', () => {

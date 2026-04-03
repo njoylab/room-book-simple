@@ -51,6 +51,12 @@ const envSchema = z.object({
   SESSION_COOKIE_NAME: z.string().default('room_booking_user'),
   /** Session duration in hours (1-168 hours, defaults to 168 = 7 days) */
   SESSION_DURATION_HOURS: z.string().default('168').transform(val => parseInt(val) || 168).refine(val => val >= 1 && val <= 168, 'SESSION_DURATION_HOURS must be between 1 and 168 hours (1 week)'),
+  /** Secret key for signing external API bearer tokens */
+  API_TOKEN_SECRET: z.string().length(32, 'API_TOKEN_SECRET must be exactly 32 characters').optional(),
+  /** External API token duration in hours */
+  API_TOKEN_DURATION_HOURS: z.string().default('720').transform(val => parseInt(val) || 720).refine(val => val >= 1 && val <= 24 * 90, 'API_TOKEN_DURATION_HOURS must be between 1 and 2160 hours (90 days)'),
+  /** Whether the external API and API access UI are enabled */
+  EXTERNAL_API_ENABLED: z.string().default('false').transform(val => val === 'true'),
 
   /** Application Configuration */
   /** Application title displayed in UI and page metadata */
@@ -129,6 +135,7 @@ export const isProduction = env.NODE_ENV === 'production';
 export const isDevelopment = env.NODE_ENV === 'development';
 /** Utility flag: true if running in test environment */
 export const isTest = env.NODE_ENV === 'test';
+export const isExternalApiEnabled = env.EXTERNAL_API_ENABLED;
 
 /**
  * Gets the base URL for the application
